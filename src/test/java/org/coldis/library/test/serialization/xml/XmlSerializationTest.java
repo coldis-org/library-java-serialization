@@ -2,6 +2,7 @@ package org.coldis.library.test.serialization.xml;
 
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.time.temporal.ChronoUnit;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
@@ -20,33 +21,31 @@ public class XmlSerializationTest {
 	 * Test data.
 	 */
 	private static final TestXmlObject[] TEST_DATA = {
-			new TestXmlObject(DateTimeHelper.getCurrentLocalDate(), DateTimeHelper.getCurrentLocalDate(),
-					DateTimeHelper.getCurrentLocalDateTime(), DateTimeHelper.getCurrentLocalDateTime()) };
+					new TestXmlObject(DateTimeHelper.getCurrentLocalDate(), DateTimeHelper.getCurrentLocalDate(),
+							DateTimeHelper.getCurrentLocalDateTime().truncatedTo(ChronoUnit.SECONDS),
+							DateTimeHelper.getCurrentLocalDateTime().truncatedTo(ChronoUnit.SECONDS)) };
 
 	/**
 	 * Tests custom XML serializers.
-	 * 
+	 *
 	 * @throws Exception If the test fails.
 	 */
 	@Test
 	public void test00CustomSerializers() throws Exception {
 		// Gets the XML marshaller/unmarshaller.
-		JAXBContext jaxbContext = JAXBContext.newInstance(TestXmlObject.class);
-		Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
-		Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+		final JAXBContext jaxbContext = JAXBContext.newInstance(TestXmlObject.class);
+		final Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
+		final Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
 		// For each test data.
-		if (TEST_DATA != null) {
-			for (TestXmlObject testData : TEST_DATA) {
-				// XML content.
-				String testXmlContent = null;
+		if (XmlSerializationTest.TEST_DATA != null) {
+			for (final TestXmlObject testData : XmlSerializationTest.TEST_DATA) {
 				// Serializes the object into XML.
-				StringWriter writer = new StringWriter();
+				final StringWriter writer = new StringWriter();
 				jaxbMarshaller.marshal(testData, writer);
-				writer.write(testXmlContent);
-				writer.close();
 				// De-serializes the XML content.
-				StringReader reader = new StringReader(testXmlContent);
-				TestXmlObject deserializedTestData = (TestXmlObject) jaxbUnmarshaller.unmarshal(reader);
+				final StringReader reader = new StringReader(writer.toString());
+				writer.close();
+				final TestXmlObject deserializedTestData = (TestXmlObject) jaxbUnmarshaller.unmarshal(reader);
 				reader.close();
 				// Asserts that the test data has not changed after serialization.
 				Assertions.assertEquals(testData, deserializedTestData);

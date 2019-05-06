@@ -6,7 +6,7 @@ import org.coldis.library.model.IdentifiedObject;
 /**
  * DTO test object.
  */
-@DtoType(namespace = "org.coldis.library.test.serialization.dto")
+@DtoType(targetPath = "src/test/java", namespace = "org.coldis.library.test.serialization.dto")
 public class DtoTestObject2 implements IdentifiedObject {
 
 	/**

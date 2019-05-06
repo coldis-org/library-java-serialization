@@ -12,7 +12,7 @@ public class DtoTestObjectDto implements Serializable {
 	/**
 	 * Serial.
 	 */
-	private static final long serialVersionUID = -780348246-1877623249L;
+	private static final long serialVersionUID = 408279662-1877623249L;
 	
 	/**
 	 * id.
@@ -61,13 +61,6 @@ public class DtoTestObjectDto implements Serializable {
 
 
 	/**
-	 * No arguments constructor.
-	 */
-	public DtoTestObjectDto() {
-		super();
-	}
-
-	/**
 	 * Default constructor.
  	 * @param id
  	 *            id.
@@ -97,7 +90,7 @@ public class DtoTestObjectDto implements Serializable {
 			int test7,
 			int[] test88,
 			java.lang.Integer test9) {
-		super();
+		this();
 		this.id = id;
 		this.test1 = test1;
 		this.test2 = test2;
@@ -106,6 +99,13 @@ public class DtoTestObjectDto implements Serializable {
 		this.test7 = test7;
 		this.test88 = test88;
 		this.test9 = test9;
+	}
+	
+	/**
+	 * No arguments constructor.
+	 */
+	public DtoTestObjectDto() {
+		super();
 	}
 
 	/**

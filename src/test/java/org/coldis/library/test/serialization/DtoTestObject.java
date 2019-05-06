@@ -11,7 +11,7 @@ import com.fasterxml.jackson.annotation.JsonGetter;
 /**
  * DTO test object.
  */
-@DtoType(namespace = "org.coldis.library.test.serialization.dto")
+@DtoType(targetPath = "src/test/java", namespace = "org.coldis.library.test.serialization.dto")
 public class DtoTestObject implements IdentifiedObject {
 
 	/**
@@ -22,7 +22,7 @@ public class DtoTestObject implements IdentifiedObject {
 	/**
 	 * Test attribute value.
 	 */
-	public static final String TEST_FINAL_ATTR_VALUE = "\"ABC\"";
+	public static final String TEST_FINAL_ATTR_VALUE = "ABC";
 
 	/**
 	 * Object identifier.

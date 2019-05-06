@@ -12,14 +12,14 @@ public class LocalDateTimeSerializer2 extends AbstractXmlLocalDateTimeSerializer
 	/**
 	 * Test format.
 	 */
-	private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyyMMdd-HH:mm:ss");
+	private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("ddMMyyyy-HH:mm:ss");
 
 	/**
 	 * @see org.coldis.library.serialization.xml.AbstractXmlLocalDateTimeSerializer#getDateFormatter()
 	 */
 	@Override
 	protected DateTimeFormatter getDateFormatter() {
-		return DATE_FORMAT;
+		return LocalDateTimeSerializer2.DATE_FORMAT;
 	}
 
 }

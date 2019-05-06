@@ -1,4 +1,4 @@
-package org.coldis.library.test.serialization.json.dto;
+package org.coldis.library.test.serialization.dto;
 
 import java.io.Serializable;
 import java.util.Objects;
@@ -22,17 +22,17 @@ public class DtoTestObjectDto implements Serializable {
 	/**
 	 * test1.
 	 */
-	private org.coldis.library.test.serialization.json.dto.DtoTestObject2Dto test1;
+	private org.coldis.library.test.serialization.dto.DtoTestObject2Dto test1;
 
 	/**
 	 * test2.
 	 */
-	private java.util.List<org.coldis.library.test.serialization.json.dto.DtoTestObject2Dto> test2;
+	private java.util.List<org.coldis.library.test.serialization.dto.DtoTestObject2Dto> test2;
 
 	/**
 	 * test4.
 	 */
-	private org.coldis.library.test.serialization.json.dto.DtoTestObject2Dto test4;
+	private org.coldis.library.test.serialization.dto.DtoTestObject2Dto test4;
 
 	/**
 	 * test5.
@@ -42,7 +42,7 @@ public class DtoTestObjectDto implements Serializable {
 	/**
 	 * test6.
 	 */
-	private org.coldis.library.test.serialization.json.dto.DtoTestObject2Dto[] test6;
+	private org.coldis.library.test.serialization.dto.DtoTestObject2Dto[] test6;
 
 	/**
 	 * test7.
@@ -90,10 +90,10 @@ public class DtoTestObjectDto implements Serializable {
 	 */
 	public DtoTestObjectDto(
 			java.lang.Long id,
-			org.coldis.library.test.serialization.json.dto.DtoTestObject2Dto test1,
-			java.util.List<org.coldis.library.test.serialization.json.dto.DtoTestObject2Dto> test2,
-			org.coldis.library.test.serialization.json.dto.DtoTestObject2Dto test4,
-			org.coldis.library.test.serialization.json.dto.DtoTestObject2Dto[] test6,
+			org.coldis.library.test.serialization.dto.DtoTestObject2Dto test1,
+			java.util.List<org.coldis.library.test.serialization.dto.DtoTestObject2Dto> test2,
+			org.coldis.library.test.serialization.dto.DtoTestObject2Dto test4,
+			org.coldis.library.test.serialization.dto.DtoTestObject2Dto[] test6,
 			int test7,
 			int[] test88,
 			java.lang.Integer test9) {
@@ -128,7 +128,7 @@ public class DtoTestObjectDto implements Serializable {
 	 * Gets the test1.
 	 * @return The test1.
 	 */
-	public org.coldis.library.test.serialization.json.dto.DtoTestObject2Dto getTest1() {
+	public org.coldis.library.test.serialization.dto.DtoTestObject2Dto getTest1() {
 		return test1;
 	}
 	/**
@@ -137,14 +137,14 @@ public class DtoTestObjectDto implements Serializable {
 	 * @param test1
 	 *            The test1.
 	 */
-	public void setTest1(final org.coldis.library.test.serialization.json.dto.DtoTestObject2Dto test1) {
+	public void setTest1(final org.coldis.library.test.serialization.dto.DtoTestObject2Dto test1) {
 		this.test1 = test1;
 	}
 	/**
 	 * Gets the test2.
 	 * @return The test2.
 	 */
-	public java.util.List<org.coldis.library.test.serialization.json.dto.DtoTestObject2Dto> getTest2() {
+	public java.util.List<org.coldis.library.test.serialization.dto.DtoTestObject2Dto> getTest2() {
 		return test2;
 	}
 	/**
@@ -153,14 +153,14 @@ public class DtoTestObjectDto implements Serializable {
 	 * @param test2
 	 *            The test2.
 	 */
-	public void setTest2(final java.util.List<org.coldis.library.test.serialization.json.dto.DtoTestObject2Dto> test2) {
+	public void setTest2(final java.util.List<org.coldis.library.test.serialization.dto.DtoTestObject2Dto> test2) {
 		this.test2 = test2;
 	}
 	/**
 	 * Gets the test4.
 	 * @return The test4.
 	 */
-	public org.coldis.library.test.serialization.json.dto.DtoTestObject2Dto getTest4() {
+	public org.coldis.library.test.serialization.dto.DtoTestObject2Dto getTest4() {
 		return test4;
 	}
 	/**
@@ -169,7 +169,7 @@ public class DtoTestObjectDto implements Serializable {
 	 * @param test4
 	 *            The test4.
 	 */
-	public void setTest4(final org.coldis.library.test.serialization.json.dto.DtoTestObject2Dto test4) {
+	public void setTest4(final org.coldis.library.test.serialization.dto.DtoTestObject2Dto test4) {
 		this.test4 = test4;
 	}
 	/**
@@ -183,7 +183,7 @@ public class DtoTestObjectDto implements Serializable {
 	 * Gets the test6.
 	 * @return The test6.
 	 */
-	public org.coldis.library.test.serialization.json.dto.DtoTestObject2Dto[] getTest6() {
+	public org.coldis.library.test.serialization.dto.DtoTestObject2Dto[] getTest6() {
 		return test6;
 	}
 	/**
@@ -192,7 +192,7 @@ public class DtoTestObjectDto implements Serializable {
 	 * @param test6
 	 *            The test6.
 	 */
-	public void setTest6(final org.coldis.library.test.serialization.json.dto.DtoTestObject2Dto[] test6) {
+	public void setTest6(final org.coldis.library.test.serialization.dto.DtoTestObject2Dto[] test6) {
 		this.test6 = test6;
 	}
 	/**

@@ -1,4 +1,4 @@
-package org.coldis.library.test.serialization.json;
+package org.coldis.library.test.serialization;
 
 import org.coldis.library.dto.DtoType;
 import org.coldis.library.model.IdentifiedObject;
@@ -6,7 +6,7 @@ import org.coldis.library.model.IdentifiedObject;
 /**
  * DTO test object.
  */
-@DtoType(namespace = "org.coldis.library.test.serialization.json.dto")
+@DtoType(namespace = "org.coldis.library.test.serialization.dto")
 public class DtoTestObject2 implements IdentifiedObject {
 
 	/**

@@ -1,4 +1,4 @@
-package org.coldis.library.test.serialization.json.dto;
+package org.coldis.library.test.serialization.dto;
 
 import java.io.Serializable;
 import java.util.Objects;

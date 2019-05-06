@@ -1,4 +1,4 @@
-package org.coldis.library.test.serialization.json;
+package org.coldis.library.test.serialization;
 
 import java.util.List;
 
@@ -11,7 +11,7 @@ import com.fasterxml.jackson.annotation.JsonGetter;
 /**
  * DTO test object.
  */
-@DtoType(namespace = "org.coldis.library.test.serialization.json.dto")
+@DtoType(namespace = "org.coldis.library.test.serialization.dto")
 public class DtoTestObject implements IdentifiedObject {
 
 	/**

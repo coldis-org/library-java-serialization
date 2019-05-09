@@ -12,7 +12,7 @@ public class DtoTestObjectDto implements Serializable {
 	/**
 	 * Serial.
 	 */
-	private static final long serialVersionUID = 408279662-1877623249L;
+	private static final long serialVersionUID = -1877623249L;
 	
 	/**
 	 * id.
@@ -61,47 +61,6 @@ public class DtoTestObjectDto implements Serializable {
 
 
 	/**
-	 * Default constructor.
- 	 * @param id
- 	 *            id.
- 	 * @param test1
- 	 *            test1.
- 	 * @param test2
- 	 *            test2.
- 	 * @param test4
- 	 *            test4.
- 	 * @param test5
- 	 *            test5.
- 	 * @param test6
- 	 *            test6.
- 	 * @param test7
- 	 *            test7.
- 	 * @param test88
- 	 *            test8.
- 	 * @param test9
- 	 *            test9.
-	 */
-	public DtoTestObjectDto(
-			java.lang.Long id,
-			org.coldis.library.test.serialization.dto.DtoTestObject2Dto test1,
-			java.util.List<org.coldis.library.test.serialization.dto.DtoTestObject2Dto> test2,
-			org.coldis.library.test.serialization.dto.DtoTestObject2Dto test4,
-			org.coldis.library.test.serialization.dto.DtoTestObject2Dto[] test6,
-			int test7,
-			int[] test88,
-			java.lang.Integer test9) {
-		this();
-		this.id = id;
-		this.test1 = test1;
-		this.test2 = test2;
-		this.test4 = test4;
-		this.test6 = test6;
-		this.test7 = test7;
-		this.test88 = test88;
-		this.test9 = test9;
-	}
-	
-	/**
 	 * No arguments constructor.
 	 */
 	public DtoTestObjectDto() {
@@ -124,6 +83,18 @@ public class DtoTestObjectDto implements Serializable {
 	public void setId(final java.lang.Long id) {
 		this.id = id;
 	}
+	
+	/**
+	 * Sets the id and returns the updated object.
+	 *
+	 * @param id
+	 *            The id.
+	 * @return The updated object.
+	 */
+	public DtoTestObjectDto withId(final java.lang.Long id) {
+		this.setId(id);
+		return this;
+	}
 	/**
 	 * Gets the test1.
 	 * @return The test1.
@@ -139,6 +110,18 @@ public class DtoTestObjectDto implements Serializable {
 	 */
 	public void setTest1(final org.coldis.library.test.serialization.dto.DtoTestObject2Dto test1) {
 		this.test1 = test1;
+	}
+	
+	/**
+	 * Sets the test1 and returns the updated object.
+	 *
+	 * @param test1
+	 *            The test1.
+	 * @return The updated object.
+	 */
+	public DtoTestObjectDto withTest1(final org.coldis.library.test.serialization.dto.DtoTestObject2Dto test1) {
+		this.setTest1(test1);
+		return this;
 	}
 	/**
 	 * Gets the test2.
@@ -156,6 +139,18 @@ public class DtoTestObjectDto implements Serializable {
 	public void setTest2(final java.util.List<org.coldis.library.test.serialization.dto.DtoTestObject2Dto> test2) {
 		this.test2 = test2;
 	}
+	
+	/**
+	 * Sets the test2 and returns the updated object.
+	 *
+	 * @param test2
+	 *            The test2.
+	 * @return The updated object.
+	 */
+	public DtoTestObjectDto withTest2(final java.util.List<org.coldis.library.test.serialization.dto.DtoTestObject2Dto> test2) {
+		this.setTest2(test2);
+		return this;
+	}
 	/**
 	 * Gets the test4.
 	 * @return The test4.
@@ -171,6 +166,18 @@ public class DtoTestObjectDto implements Serializable {
 	 */
 	public void setTest4(final org.coldis.library.test.serialization.dto.DtoTestObject2Dto test4) {
 		this.test4 = test4;
+	}
+	
+	/**
+	 * Sets the test4 and returns the updated object.
+	 *
+	 * @param test4
+	 *            The test4.
+	 * @return The updated object.
+	 */
+	public DtoTestObjectDto withTest4(final org.coldis.library.test.serialization.dto.DtoTestObject2Dto test4) {
+		this.setTest4(test4);
+		return this;
 	}
 	/**
 	 * Gets the test5.
@@ -195,6 +202,18 @@ public class DtoTestObjectDto implements Serializable {
 	public void setTest6(final org.coldis.library.test.serialization.dto.DtoTestObject2Dto[] test6) {
 		this.test6 = test6;
 	}
+	
+	/**
+	 * Sets the test6 and returns the updated object.
+	 *
+	 * @param test6
+	 *            The test6.
+	 * @return The updated object.
+	 */
+	public DtoTestObjectDto withTest6(final org.coldis.library.test.serialization.dto.DtoTestObject2Dto[] test6) {
+		this.setTest6(test6);
+		return this;
+	}
 	/**
 	 * Gets the test7.
 	 * @return The test7.
@@ -210,6 +229,18 @@ public class DtoTestObjectDto implements Serializable {
 	 */
 	public void setTest7(final int test7) {
 		this.test7 = test7;
+	}
+	
+	/**
+	 * Sets the test7 and returns the updated object.
+	 *
+	 * @param test7
+	 *            The test7.
+	 * @return The updated object.
+	 */
+	public DtoTestObjectDto withTest7(final int test7) {
+		this.setTest7(test7);
+		return this;
 	}
 	/**
 	 * Gets the test8.
@@ -227,6 +258,18 @@ public class DtoTestObjectDto implements Serializable {
 	public void setTest88(final int[] test88) {
 		this.test88 = test88;
 	}
+	
+	/**
+	 * Sets the test8 and returns the updated object.
+	 *
+	 * @param test88
+	 *            The test8.
+	 * @return The updated object.
+	 */
+	public DtoTestObjectDto withTest88(final int[] test88) {
+		this.setTest88(test88);
+		return this;
+	}
 	/**
 	 * Gets the test9.
 	 * @return The test9.
@@ -242,6 +285,18 @@ public class DtoTestObjectDto implements Serializable {
 	 */
 	public void setTest9(final java.lang.Integer test9) {
 		this.test9 = test9;
+	}
+	
+	/**
+	 * Sets the test9 and returns the updated object.
+	 *
+	 * @param test9
+	 *            The test9.
+	 * @return The updated object.
+	 */
+	public DtoTestObjectDto withTest9(final java.lang.Integer test9) {
+		this.setTest9(test9);
+		return this;
 	}
 
 	/**

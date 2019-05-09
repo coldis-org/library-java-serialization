@@ -20,11 +20,14 @@ public class ObjectMapperHelperTest {
 	/**
 	 * Test data.
 	 */
-	private static final DtoTestObjectDto[] TEST_DATA = { new DtoTestObjectDto(10L, new DtoTestObject2Dto(1L, "test1"),
-			List.of(new DtoTestObject2Dto(2L, "test2"), new DtoTestObject2Dto(3L, "test3")),
-			new DtoTestObject2Dto(4L, "test4"),
-			new DtoTestObject2Dto[] { new DtoTestObject2Dto(5L, "test5"), new DtoTestObject2Dto(6L, "test6") }, 1,
-			new int[] { 2, 3, 4 }, 5) };
+	private static final DtoTestObjectDto[] TEST_DATA = {
+					new DtoTestObjectDto().withId(10L).withTest1(new DtoTestObject2Dto().withId(1L).withTest("test1"))
+					.withTest2(List.of(new DtoTestObject2Dto().withId(2L).withTest("test2"),
+							new DtoTestObject2Dto().withId(3L).withTest("test3")))
+					.withTest4(new DtoTestObject2Dto().withId(4L).withTest("test4"))
+					.withTest6(new DtoTestObject2Dto[] { new DtoTestObject2Dto().withId(5L).withTest("test5"),
+									new DtoTestObject2Dto().withId(6L).withTest("test6") })
+					.withTest7(7).withTest88(new int[] { 2, 3, 4 }).withTest9(9) };
 
 	/**
 	 * Object mapper.

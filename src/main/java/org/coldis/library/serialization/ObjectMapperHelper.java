@@ -1,7 +1,16 @@
 package org.coldis.library.serialization;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
+
 import org.coldis.library.exception.IntegrationException;
+import org.coldis.library.helper.DateTimeHelper;
 import org.coldis.library.model.SimpleMessage;
+import org.coldis.library.serialization.json.GenericDateTimeDeserializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -10,7 +19,13 @@ import org.springframework.core.type.filter.AnnotationTypeFilter;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.datatype.jsr310.deser.InstantDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalTimeDeserializer;
 
 /**
  * JSON helper.
@@ -21,6 +36,38 @@ public class ObjectMapperHelper {
 	 * Logger.
 	 */
 	private static final Logger LOGGER = LoggerFactory.getLogger(ObjectMapperHelper.class);
+
+	/**
+	 * Gets the configured date/time module.
+	 *
+	 * @return The configured date/time module.
+	 */
+	public static Module getDateTimeModule() {
+		// Creates the time module.
+		final JavaTimeModule javaTimeModule = new JavaTimeModule();
+		// Creates de-serializers for date/time classes.
+		final LocalDateTimeDeserializer localDateTimeDeserializer = new LocalDateTimeDeserializer(
+				DateTimeHelper.DATE_TIME_FORMATTER);
+		final LocalDateDeserializer localDateDeserializer = new LocalDateDeserializer(
+				DateTimeHelper.DATE_TIME_FORMATTER);
+		final LocalTimeDeserializer localTimeDeserializer = new LocalTimeDeserializer(
+				DateTimeHelper.DATE_TIME_FORMATTER);
+		final GenericDateTimeDeserializer<OffsetDateTime> offsetDateTimeDeserializer = new GenericDateTimeDeserializer<>(
+				InstantDeserializer.OFFSET_DATE_TIME, DateTimeHelper.DATE_TIME_FORMATTER);
+		final GenericDateTimeDeserializer<ZonedDateTime> zonedDateTimeDeserializer = new GenericDateTimeDeserializer<>(
+				InstantDeserializer.ZONED_DATE_TIME, DateTimeHelper.DATE_TIME_FORMATTER);
+		final GenericDateTimeDeserializer<Instant> instantDeserializer = new GenericDateTimeDeserializer<>(
+				InstantDeserializer.INSTANT, DateTimeHelper.DATE_TIME_FORMATTER);
+		// Adds the de-serializers to the module.
+		javaTimeModule.addDeserializer(LocalDateTime.class, localDateTimeDeserializer)
+		.addDeserializer(LocalDate.class, localDateDeserializer)
+		.addDeserializer(LocalTime.class, localTimeDeserializer)
+		.addDeserializer(OffsetDateTime.class, offsetDateTimeDeserializer)
+		.addDeserializer(ZonedDateTime.class, zonedDateTimeDeserializer)
+		.addDeserializer(Instant.class, instantDeserializer);
+		// Returns the module.
+		return javaTimeModule;
+	}
 
 	/**
 	 * Adds the subtypes found from in a package to the object mapper.

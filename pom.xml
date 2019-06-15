@@ -10,7 +10,7 @@
 
 	<groupId>org.coldis.library</groupId>
 	<artifactId>serialization</artifactId>
-	<version>0.0.3-SNAPSHOT</version>
+	<version>0.0.3</version>
 	<packaging>jar</packaging>
 
 	<name>Serialization utilities</name>
@@ -23,7 +23,7 @@
 		<url>https://github.com/coldis-org/library-java-serialization</url>
 		<connection>scm:git:https://github.com/coldis-org/library-java-serialization.git</connection>
 		<developerConnection>scm:git:git@github.com:coldis-org/library-java-serialization.git</developerConnection>
-		<tag>HEAD</tag>
+		<tag>serialization-0.0.3</tag>
 	</scm>
 
 	<dependencies>

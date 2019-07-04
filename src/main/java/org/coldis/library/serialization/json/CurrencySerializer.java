@@ -1,5 +1,6 @@
 package org.coldis.library.serialization.json;
 
+import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Locale;
 
@@ -9,16 +10,27 @@ import java.util.Locale;
 public class CurrencySerializer extends NumberSerializer {
 
 	/**
+	 * Gets the number format for the given locale.
+	 *
+	 * @param  locale          Locale to be used.
+	 * @param  parseBigDecimal If big decimals should also be parsed
+	 * @param  groupingUsed    If grouping should be used.
+	 * @return                 The number format.
+	 */
+	public static DecimalFormat getNumberFormat(final Locale locale, final Boolean parseBigDecimal,
+			final Boolean groupingUsed) {
+		// Creates and returns the number format.
+		final DecimalFormat numberFormat = NumberSerializer.getNumberFormat(locale, parseBigDecimal, groupingUsed);
+		numberFormat.setMaximumFractionDigits(2);
+		return numberFormat;
+	}
+
+	/**
 	 * @see org.coldis.library.serialization.json.NumberSerializer#getNumberFormat(java.util.Locale)
 	 */
 	@Override
 	protected NumberFormat getNumberFormat(final Locale locale) {
-		// Gets the default number format.
-		final NumberFormat numberFormat = super.getNumberFormat(locale);
-		// Sets the fraction digits.
-		numberFormat.setMaximumFractionDigits(2);
-		// Returns the number format.
-		return numberFormat;
+		return CurrencySerializer.getNumberFormat(locale, true, false);
 	}
 
 }

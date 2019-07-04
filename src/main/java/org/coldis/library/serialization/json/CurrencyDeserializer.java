@@ -13,12 +13,7 @@ public class CurrencyDeserializer extends NumberDeserializer {
 	 */
 	@Override
 	protected NumberFormat getNumberFormat(final Locale locale) {
-		// Gets the default number format.
-		final NumberFormat numberFormat = super.getNumberFormat(locale);
-		// Sets the fraction digits.
-		numberFormat.setMaximumFractionDigits(2);
-		// Returns the number format.
-		return numberFormat;
+		return CurrencySerializer.getNumberFormat(locale, true, false);
 	}
 
 }

@@ -10,16 +10,28 @@ import java.util.Locale;
 public class PercentageSerializer extends NumberSerializer {
 
 	/**
+	 * Gets the number format for the given locale.
+	 *
+	 * @param  locale          Locale to be used.
+	 * @param  parseBigDecimal If big decimals should also be parsed
+	 * @param  groupingUsed    If grouping should be used.
+	 * @return                 The number format.
+	 */
+	public static DecimalFormat getNumberFormat(final Locale locale, final Boolean parseBigDecimal,
+			final Boolean groupingUsed) {
+		// Creates and returns the number format.
+		final DecimalFormat numberFormat = NumberSerializer.getNumberFormat(locale, parseBigDecimal, groupingUsed);
+		numberFormat.setMaximumFractionDigits(2);
+		numberFormat.setMultiplier(100);
+		return numberFormat;
+	}
+
+	/**
 	 * @see org.coldis.library.serialization.json.NumberSerializer#getNumberFormat(java.util.Locale)
 	 */
 	@Override
 	protected NumberFormat getNumberFormat(final Locale locale) {
-		// Gets the default number format.
-		final DecimalFormat numberFormat = (DecimalFormat) super.getNumberFormat(locale);
-		// Sets the percentage multiplier.
-		numberFormat.setMultiplier(100);
-		// Returns the number format.
-		return numberFormat;
+		return PercentageSerializer.getNumberFormat(locale, true, false);
 	}
 
 }

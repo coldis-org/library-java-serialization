@@ -29,6 +29,7 @@ public class NumberSerializer extends JsonSerializer<Number> {
 		// Creates and returns the number format.
 		final DecimalFormat numberFormat = new DecimalFormat();
 		numberFormat.setDecimalFormatSymbols(new DecimalFormatSymbols(locale));
+		numberFormat.setGroupingUsed(groupingUsed);
 		numberFormat.setParseBigDecimal(parseBigDecimal);
 		return numberFormat;
 	}

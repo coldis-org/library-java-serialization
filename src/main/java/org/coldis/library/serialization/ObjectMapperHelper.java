@@ -103,6 +103,20 @@ public class ObjectMapperHelper {
 	}
 
 	/**
+	 * Creates the object mapper.
+	 *
+	 * @return Object mapper.
+	 */
+	public static ObjectMapper createMapper() {
+		// Creates the object mapper.
+		final ObjectMapper objectMapper = new ObjectMapper();
+		// Registers the date/time module.
+		objectMapper.registerModule(ObjectMapperHelper.getDateTimeModule());
+		// Returns the object mapper.
+		return objectMapper;
+	}
+
+	/**
 	 * De-serializes a given object into a target type.
 	 *
 	 * @param  <TargetType>         The target object type.

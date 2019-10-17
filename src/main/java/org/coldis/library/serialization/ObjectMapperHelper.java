@@ -93,6 +93,8 @@ public class ObjectMapperHelper {
 					catch (final Exception exception) {
 						// Logs it.
 						ObjectMapperHelper.LOGGER.error("Class '" + currentCsvType.getBeanClassName()
+						+ "' could not be registered as a subtype.");
+						ObjectMapperHelper.LOGGER.debug("Class '" + currentCsvType.getBeanClassName()
 						+ "' could not be registered as a subtype.", exception);
 					}
 				}
@@ -139,6 +141,8 @@ public class ObjectMapperHelper {
 			// If errors should be silently ignored.
 			if (resumeOnErrors) {
 				// Logs and returns null.
+				ObjectMapperHelper.LOGGER.error("Error silently ignored: object '" + object
+						+ "' could not be de-serialized into target class '" + objectType + "'.");
 				ObjectMapperHelper.LOGGER.debug("Error silently ignored: object '" + object
 						+ "' could not be de-serialized into target class '" + objectType + "'.", exception);
 				return null;
@@ -174,6 +178,8 @@ public class ObjectMapperHelper {
 			// If errors should be silently ignored.
 			if (resumeOnErrors) {
 				// Logs and returns null.
+				ObjectMapperHelper.LOGGER.error("Error silently ignored: object '" + object
+						+ "' could not be de-serialized into target class '" + objectType + "'.");
 				ObjectMapperHelper.LOGGER.debug("Error silently ignored: object '" + object
 						+ "' could not be de-serialized into target class '" + objectType + "'.", exception);
 				return null;
@@ -209,6 +215,8 @@ public class ObjectMapperHelper {
 			// If errors should be silently ignored.
 			if (resumeOnErrors) {
 				// Logs and returns null.
+				ObjectMapperHelper.LOGGER.error("Error silently ignored: object '" + object
+						+ "' could not be serialized with view '" + view + "'.");
 				ObjectMapperHelper.LOGGER.debug("Error silently ignored: object '" + object
 						+ "' could not be serialized with view '" + view + "'.", exception);
 				return null;
@@ -243,6 +251,8 @@ public class ObjectMapperHelper {
 			// If errors should be silently ignored.
 			if (resumeOnErrors) {
 				// Logs and returns null.
+				ObjectMapperHelper.LOGGER.error("Error silentely ignored: object '" + object
+						+ "' could not be converted into target class '" + objectType + "'.");
 				ObjectMapperHelper.LOGGER.debug("Error silentely ignored: object '" + object
 						+ "' could not be converted into target class '" + objectType + "'.", exception);
 				return null;
@@ -277,6 +287,8 @@ public class ObjectMapperHelper {
 			// If errors should be silently ignored.
 			if (resumeOnErrors) {
 				// Logs and returns null.
+				ObjectMapperHelper.LOGGER.error("Error silentely ignored: object '" + object
+						+ "' could not be converted into target class '" + objectType + "'.");
 				ObjectMapperHelper.LOGGER.debug("Error silentely ignored: object '" + object
 						+ "' could not be converted into target class '" + objectType + "'.", exception);
 				return null;

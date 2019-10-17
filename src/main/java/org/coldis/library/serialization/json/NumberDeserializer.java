@@ -41,7 +41,7 @@ public class NumberDeserializer extends JsonDeserializer<Number> {
 		// If the number could not be deserialized.
 		catch (final ParseException exception) {
 			// Throws an IO exception.
-			throw new IOException("Could not deserialize object '" + parser.getText() + "'.");
+			throw new IOException("Could not deserialize object '" + parser.getText() + "'.", exception);
 		}
 	}
 

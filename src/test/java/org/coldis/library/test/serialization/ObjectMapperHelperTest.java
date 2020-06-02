@@ -142,28 +142,4 @@ public class ObjectMapperHelperTest {
 		}
 	}
 
-	/**
-	 * Tests object cloning.
-	 *
-	 * @throws Exception If the test does not succeed.
-	 */
-	@Test
-	public void test02Cloning() throws Exception {
-		// For each test data.
-		for (final DtoTestObjectDto originalDto : ObjectMapperHelperTest.TEST_DATA) {
-			// Clones the test object.
-			final DtoTestObjectDto clonedDto = ObjectMapperHelper.deepClone(this.objectMapper, originalDto,
-					new TypeReference<DtoTestObjectDto>() {
-			});
-			// The DTO should remain the same.
-			Assertions.assertEquals(originalDto, clonedDto);
-			// Makes sure the object are not the same (although equal).
-			Assertions.assertNotSame(originalDto, clonedDto);
-			Assertions.assertNotSame(originalDto.getTest1(), clonedDto.getTest1());
-			Assertions.assertNotSame(originalDto.getTest2(), clonedDto.getTest2());
-			Assertions.assertNotSame(originalDto.getTest4(), clonedDto.getTest4());
-			Assertions.assertNotSame(originalDto.getTest6(), clonedDto.getTest6());
-		}
-	}
-
 }

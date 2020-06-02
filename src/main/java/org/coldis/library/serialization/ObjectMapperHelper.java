@@ -305,21 +305,4 @@ public class ObjectMapperHelper {
 		}
 	}
 
-	/**
-	 * Deep clones an object by serializing and de-serializing it.
-	 *
-	 * @param  <TargetType>         The target object type.
-	 * @param  objectMapper         The object mapper to use during cloning.
-	 * @param  object               The original object to be cloned.
-	 * @param  objectType           The target object type.
-	 * @param  resumeOnErrors       If errors should be silently ignored.
-	 * @return                      The cloned object.
-	 * @throws IntegrationException If the object cannot be cloned.
-	 */
-	public static <TargetType> TargetType deepClone(final ObjectMapper objectMapper, final Object object,
-			final TypeReference<TargetType> objectType) throws IntegrationException {
-		return ObjectMapperHelper.deserialize(objectMapper,
-				ObjectMapperHelper.serialize(objectMapper, object, null, false), objectType, false);
-	}
-
 }

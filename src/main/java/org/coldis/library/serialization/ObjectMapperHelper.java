@@ -46,25 +46,19 @@ public class ObjectMapperHelper {
 		// Creates the time module.
 		final JavaTimeModule javaTimeModule = new JavaTimeModule();
 		// Creates de-serializers for date/time classes.
-		final LocalDateTimeDeserializer localDateTimeDeserializer = new LocalDateTimeDeserializer(
+		final LocalDateTimeDeserializer localDateTimeDeserializer = new LocalDateTimeDeserializer(DateTimeHelper.DATE_TIME_FORMATTER);
+		final LocalDateDeserializer localDateDeserializer = new LocalDateDeserializer(DateTimeHelper.DATE_TIME_FORMATTER);
+		final LocalTimeDeserializer localTimeDeserializer = new LocalTimeDeserializer(DateTimeHelper.DATE_TIME_FORMATTER);
+		final GenericDateTimeDeserializer<OffsetDateTime> offsetDateTimeDeserializer = new GenericDateTimeDeserializer<>(InstantDeserializer.OFFSET_DATE_TIME,
 				DateTimeHelper.DATE_TIME_FORMATTER);
-		final LocalDateDeserializer localDateDeserializer = new LocalDateDeserializer(
+		final GenericDateTimeDeserializer<ZonedDateTime> zonedDateTimeDeserializer = new GenericDateTimeDeserializer<>(InstantDeserializer.ZONED_DATE_TIME,
 				DateTimeHelper.DATE_TIME_FORMATTER);
-		final LocalTimeDeserializer localTimeDeserializer = new LocalTimeDeserializer(
+		final GenericDateTimeDeserializer<Instant> instantDeserializer = new GenericDateTimeDeserializer<>(InstantDeserializer.INSTANT,
 				DateTimeHelper.DATE_TIME_FORMATTER);
-		final GenericDateTimeDeserializer<OffsetDateTime> offsetDateTimeDeserializer = new GenericDateTimeDeserializer<>(
-				InstantDeserializer.OFFSET_DATE_TIME, DateTimeHelper.DATE_TIME_FORMATTER);
-		final GenericDateTimeDeserializer<ZonedDateTime> zonedDateTimeDeserializer = new GenericDateTimeDeserializer<>(
-				InstantDeserializer.ZONED_DATE_TIME, DateTimeHelper.DATE_TIME_FORMATTER);
-		final GenericDateTimeDeserializer<Instant> instantDeserializer = new GenericDateTimeDeserializer<>(
-				InstantDeserializer.INSTANT, DateTimeHelper.DATE_TIME_FORMATTER);
 		// Adds the de-serializers to the module.
-		javaTimeModule.addDeserializer(LocalDateTime.class, localDateTimeDeserializer)
-		.addDeserializer(LocalDate.class, localDateDeserializer)
-		.addDeserializer(LocalTime.class, localTimeDeserializer)
-		.addDeserializer(OffsetDateTime.class, offsetDateTimeDeserializer)
-		.addDeserializer(ZonedDateTime.class, zonedDateTimeDeserializer)
-		.addDeserializer(Instant.class, instantDeserializer);
+		javaTimeModule.addDeserializer(LocalDateTime.class, localDateTimeDeserializer).addDeserializer(LocalDate.class, localDateDeserializer)
+				.addDeserializer(LocalTime.class, localTimeDeserializer).addDeserializer(OffsetDateTime.class, offsetDateTimeDeserializer)
+				.addDeserializer(ZonedDateTime.class, zonedDateTimeDeserializer).addDeserializer(Instant.class, instantDeserializer);
 		// Returns the module.
 		return javaTimeModule;
 	}
@@ -76,10 +70,11 @@ public class ObjectMapperHelper {
 	 * @param  packagesNames The packages to find the subtypes within.
 	 * @return               The configured object mapper.
 	 */
-	public static ObjectMapper addSubtypesFromPackage(final ObjectMapper objectMapper, final String... packagesNames) {
+	public static ObjectMapper addSubtypesFromPackage(
+			final ObjectMapper objectMapper,
+			final String... packagesNames) {
 		// Creates a scanner to find class with type name information.
-		final ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(
-				false);
+		final ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(false);
 		scanner.addIncludeFilter(new AnnotationTypeFilter(JsonTypeName.class));
 		// For each package and found type.
 		if (packagesNames != null) {
@@ -92,10 +87,7 @@ public class ObjectMapperHelper {
 					// If the class cannot be found.
 					catch (final Exception exception) {
 						// Logs it.
-						ObjectMapperHelper.LOGGER.error("Class '" + currentCsvType.getBeanClassName()
-						+ "' could not be registered as a subtype: " + exception.getLocalizedMessage());
-						ObjectMapperHelper.LOGGER.debug("Class '" + currentCsvType.getBeanClassName()
-						+ "' could not be registered as a subtype.", exception);
+						ObjectMapperHelper.LOGGER.debug("Class '" + currentCsvType.getBeanClassName() + "' could not be registered as a subtype.", exception);
 					}
 				}
 			}
@@ -130,8 +122,11 @@ public class ObjectMapperHelper {
 	 * @return                      The de-serialized object.
 	 * @throws IntegrationException If the object cannot be de-serialized.
 	 */
-	public static <TargetType> TargetType deserialize(final ObjectMapper objectMapper, final String object,
-			final Class<TargetType> objectType, final Boolean resumeOnErrors) throws IntegrationException {
+	public static <TargetType> TargetType deserialize(
+			final ObjectMapper objectMapper,
+			final String object,
+			final Class<TargetType> objectType,
+			final Boolean resumeOnErrors) throws IntegrationException {
 		// Tries to de-serialize the given object into a target type.
 		try {
 			return objectMapper.readValue(object, objectType);
@@ -141,11 +136,8 @@ public class ObjectMapperHelper {
 			// If errors should be silently ignored.
 			if (resumeOnErrors) {
 				// Logs and returns null.
-				ObjectMapperHelper.LOGGER.error(
-						"Error silently ignored: object '" + object + "' could not be de-serialized into target class '"
-								+ objectType + "': " + exception.getLocalizedMessage());
-				ObjectMapperHelper.LOGGER.debug("Error silently ignored: object '" + object
-						+ "' could not be de-serialized into target class '" + objectType + "'.", exception);
+				ObjectMapperHelper.LOGGER
+						.debug("Error silently ignored: object '" + object + "' could not be de-serialized into target class '" + objectType + "'.", exception);
 				return null;
 			}
 			// If errors should not be silently ignored.
@@ -168,8 +160,11 @@ public class ObjectMapperHelper {
 	 * @return                      The de-serialized object.
 	 * @throws IntegrationException If the object cannot be de-serialized.
 	 */
-	public static <TargetType> TargetType deserialize(final ObjectMapper objectMapper, final String object,
-			final TypeReference<TargetType> objectType, final Boolean resumeOnErrors) throws IntegrationException {
+	public static <TargetType> TargetType deserialize(
+			final ObjectMapper objectMapper,
+			final String object,
+			final TypeReference<TargetType> objectType,
+			final Boolean resumeOnErrors) throws IntegrationException {
 		// Tries to de-serialize the given object into a target type.
 		try {
 			return objectMapper.readValue(object, objectType);
@@ -179,11 +174,8 @@ public class ObjectMapperHelper {
 			// If errors should be silently ignored.
 			if (resumeOnErrors) {
 				// Logs and returns null.
-				ObjectMapperHelper.LOGGER.error(
-						"Error silently ignored: object '" + object + "' could not be de-serialized into target class '"
-								+ objectType + "': " + exception.getLocalizedMessage());
-				ObjectMapperHelper.LOGGER.debug("Error silently ignored: object '" + object
-						+ "' could not be de-serialized into target class '" + objectType + "'.", exception);
+				ObjectMapperHelper.LOGGER
+						.debug("Error silently ignored: object '" + object + "' could not be de-serialized into target class '" + objectType + "'.", exception);
 				return null;
 			}
 			// If errors should not be silently ignored.
@@ -206,8 +198,11 @@ public class ObjectMapperHelper {
 	 * @return                      The serialized object.
 	 * @throws IntegrationException If the object cannot be serialized.
 	 */
-	public static <OriginalType> String serialize(final ObjectMapper objectMapper, final OriginalType object,
-			final Class<?> view, final Boolean resumeOnErrors) throws IntegrationException {
+	public static <OriginalType> String serialize(
+			final ObjectMapper objectMapper,
+			final OriginalType object,
+			final Class<?> view,
+			final Boolean resumeOnErrors) throws IntegrationException {
 		// Tries to serialize the given object into a target type.
 		try {
 			return objectMapper.writerWithView(view).writeValueAsString(object);
@@ -217,10 +212,7 @@ public class ObjectMapperHelper {
 			// If errors should be silently ignored.
 			if (resumeOnErrors) {
 				// Logs and returns null.
-				ObjectMapperHelper.LOGGER.error("Error silently ignored: object '" + object
-						+ "' could not be serialized with view '" + view + "': " + exception.getLocalizedMessage());
-				ObjectMapperHelper.LOGGER.debug("Error silently ignored: object '" + object
-						+ "' could not be serialized with view '" + view + "'.", exception);
+				ObjectMapperHelper.LOGGER.debug("Error silently ignored: object '" + object + "' could not be serialized with view '" + view + "'.", exception);
 				return null;
 			}
 			// If errors should not be silently ignored.
@@ -242,8 +234,11 @@ public class ObjectMapperHelper {
 	 * @return                      The converted object.
 	 * @throws IntegrationException If the object cannot be converted.
 	 */
-	public static <TargetType> TargetType convert(final ObjectMapper objectMapper, final Object object,
-			final Class<TargetType> objectType, final Boolean resumeOnErrors) throws IntegrationException {
+	public static <TargetType> TargetType convert(
+			final ObjectMapper objectMapper,
+			final Object object,
+			final Class<TargetType> objectType,
+			final Boolean resumeOnErrors) throws IntegrationException {
 		// Tries to convert the given object into a target type.
 		try {
 			return objectMapper.convertValue(object, objectType);
@@ -253,11 +248,8 @@ public class ObjectMapperHelper {
 			// If errors should be silently ignored.
 			if (resumeOnErrors) {
 				// Logs and returns null.
-				ObjectMapperHelper.LOGGER.error(
-						"Error silentely ignored: object '" + object + "' could not be converted into target class '"
-								+ objectType + "': " + exception.getLocalizedMessage());
-				ObjectMapperHelper.LOGGER.debug("Error silentely ignored: object '" + object
-						+ "' could not be converted into target class '" + objectType + "'.", exception);
+				ObjectMapperHelper.LOGGER
+						.debug("Error silentely ignored: object '" + object + "' could not be converted into target class '" + objectType + "'.", exception);
 				return null;
 			}
 			// If errors should not be silently ignored.
@@ -279,8 +271,11 @@ public class ObjectMapperHelper {
 	 * @return                      The converted object.
 	 * @throws IntegrationException If the object cannot be converted.
 	 */
-	public static <TargetType> TargetType convert(final ObjectMapper objectMapper, final Object object,
-			final TypeReference<TargetType> objectType, final Boolean resumeOnErrors) throws IntegrationException {
+	public static <TargetType> TargetType convert(
+			final ObjectMapper objectMapper,
+			final Object object,
+			final TypeReference<TargetType> objectType,
+			final Boolean resumeOnErrors) throws IntegrationException {
 		// Tries to convert the given object into a target type.
 		try {
 			return objectMapper.convertValue(object, objectType);
@@ -290,11 +285,8 @@ public class ObjectMapperHelper {
 			// If errors should be silently ignored.
 			if (resumeOnErrors) {
 				// Logs and returns null.
-				ObjectMapperHelper.LOGGER.error(
-						"Error silentely ignored: object '" + object + "' could not be converted into target class '"
-								+ objectType + "': " + exception.getLocalizedMessage());
-				ObjectMapperHelper.LOGGER.debug("Error silentely ignored: object '" + object
-						+ "' could not be converted into target class '" + objectType + "'.", exception);
+				ObjectMapperHelper.LOGGER
+						.debug("Error silentely ignored: object '" + object + "' could not be converted into target class '" + objectType + "'.", exception);
 				return null;
 			}
 			// If errors should not be silently ignored.

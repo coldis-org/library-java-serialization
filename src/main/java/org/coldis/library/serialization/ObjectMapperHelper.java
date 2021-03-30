@@ -297,4 +297,23 @@ public class ObjectMapperHelper {
 		}
 	}
 
+	/**
+	 * 
+	 * @param  <TargetType>   Target type.
+	 * @param  objectMapper   Object mapper.
+	 * @param  object         Object.
+	 * @param  view           View.
+	 * @param  objectType     Object type.
+	 * @param  resumeOnErrors If errors should be ignored.
+	 * @return                The cloned object.
+	 */
+	public static <TargetType> TargetType deepClone(
+			final ObjectMapper objectMapper,
+			final Object object,
+			final Class<?> view,
+			final TypeReference<TargetType> objectType,
+			final Boolean resumeOnErrors) {
+		return deserialize(objectMapper, serialize(objectMapper, object, view, resumeOnErrors), objectType, resumeOnErrors);
+	}
+
 }

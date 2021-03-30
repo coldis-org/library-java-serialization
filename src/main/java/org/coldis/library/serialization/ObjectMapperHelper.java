@@ -298,7 +298,7 @@ public class ObjectMapperHelper {
 	}
 
 	/**
-	 * 
+	 *
 	 * @param  <TargetType>   Target type.
 	 * @param  objectMapper   Object mapper.
 	 * @param  object         Object.
@@ -313,7 +313,8 @@ public class ObjectMapperHelper {
 			final Class<?> view,
 			final TypeReference<TargetType> objectType,
 			final Boolean resumeOnErrors) {
-		return deserialize(objectMapper, serialize(objectMapper, object, view, resumeOnErrors), objectType, resumeOnErrors);
+		return ObjectMapperHelper.deserialize(objectMapper, ObjectMapperHelper.serialize(objectMapper, object, view, resumeOnErrors), objectType,
+				resumeOnErrors);
 	}
 
 }

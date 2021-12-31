@@ -26,7 +26,7 @@ public class XmlSerializationTest {
 							DateTimeHelper.getCurrentLocalDateTime().truncatedTo(ChronoUnit.SECONDS)) };
 
 	/**
-	 * Tests custom XML serializers.
+	 * Tests org.coldis.library.serialization.positional XML serializers.
 	 *
 	 * @throws Exception If the test fails.
 	 */

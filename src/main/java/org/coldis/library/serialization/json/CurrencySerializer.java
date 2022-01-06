@@ -17,10 +17,13 @@ public class CurrencySerializer extends NumberSerializer {
 	 * @param  groupingUsed    If grouping should be used.
 	 * @return                 The number format.
 	 */
-	public static DecimalFormat getNumberFormat(final Locale locale, final Boolean parseBigDecimal,
+	public static DecimalFormat getNumberFormat(
+			final Locale locale,
+			final Boolean parseBigDecimal,
 			final Boolean groupingUsed) {
 		// Creates and returns the number format.
 		final DecimalFormat numberFormat = NumberSerializer.getNumberFormat(locale, parseBigDecimal, groupingUsed);
+		numberFormat.setMinimumFractionDigits(2);
 		numberFormat.setMaximumFractionDigits(2);
 		return numberFormat;
 	}
@@ -29,7 +32,8 @@ public class CurrencySerializer extends NumberSerializer {
 	 * @see org.coldis.library.serialization.json.NumberSerializer#getNumberFormat(java.util.Locale)
 	 */
 	@Override
-	protected NumberFormat getNumberFormat(final Locale locale) {
+	protected NumberFormat getNumberFormat(
+			final Locale locale) {
 		return CurrencySerializer.getNumberFormat(locale, true, false);
 	}
 

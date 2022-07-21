@@ -1,13 +1,12 @@
 package org.coldis.library.test.serialization.dto;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Objects;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiModelProperty.AccessMode;
-
-import java.util.Arrays;
 
 /**
  * DtoTestObjectDto.

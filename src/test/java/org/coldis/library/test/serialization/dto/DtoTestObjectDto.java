@@ -65,6 +65,11 @@ public class DtoTestObjectDto implements Serializable {
 	 */
 	private java.lang.Integer test9;
 
+	/**
+	 * typeName.
+	 */
+	private final java.lang.String typeName = "org.coldis.library.test.serialization.DtoTestObject";
+
 
 	/**
 	 * No arguments constructor.
@@ -358,6 +363,19 @@ public class DtoTestObjectDto implements Serializable {
 		this.setTest9(test9);
 		return this;
 	}
+	/**
+	 * Gets the typeName.
+	 * @return The typeName.
+	 */
+	
+	@ApiModelProperty(
+			required = false,
+			value = "typeName",
+			accessMode = AccessMode.READ_ONLY)
+	public java.lang.String getTypeName() {
+		return typeName;
+	}
+	
 
 	/**
 	 * @see java.lang.Object#hashCode()
@@ -372,7 +390,8 @@ public class DtoTestObjectDto implements Serializable {
 				test2,
 				test4,
 				test5,
-				test7
+				test7,
+				typeName
 			);
 		result = prime * result + Arrays.hashCode(test6);
 		result = prime * result + Arrays.hashCode(test88);
@@ -416,6 +435,9 @@ public class DtoTestObjectDto implements Serializable {
 			return false;
 		}
 		if (! Arrays.equals(test88, other.test88)) {
+			return false;
+		}
+		if (! Objects.equals(typeName, other.typeName)) {
 			return false;
 		}
 		return true;

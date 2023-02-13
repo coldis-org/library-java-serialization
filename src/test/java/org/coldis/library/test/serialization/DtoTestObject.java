@@ -5,19 +5,30 @@ import java.util.List;
 import org.coldis.library.dto.DtoAttribute;
 import org.coldis.library.dto.DtoType;
 import org.coldis.library.model.Identifiable;
+import org.coldis.library.model.Typable;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 
 /**
  * DTO test object.
  */
-@DtoType(targetPath = "src/test/java", namespace = "org.coldis.library.test.serialization.dto")
-public class DtoTestObject implements Identifiable {
+@JsonTypeName(value = DtoTestObject.TYPE_NAME)
+@DtoType(
+		targetPath = "src/test/java",
+		namespace = "org.coldis.library.test.serialization.dto"
+)
+public class DtoTestObject implements Identifiable, Typable {
 
 	/**
 	 * Serial.
 	 */
 	private static final long serialVersionUID = -6904605762253009838L;
+
+	/**
+	 * Type name.
+	 */
+	public static final String TYPE_NAME = "org.coldis.library.test.serialization.DtoTestObject";
 
 	/**
 	 * Test attribute value.
@@ -87,7 +98,8 @@ public class DtoTestObject implements Identifiable {
 	 *
 	 * @param id New identifier.
 	 */
-	public void setId(final Long id) {
+	public void setId(
+			final Long id) {
 		this.id = id;
 	}
 
@@ -105,7 +117,8 @@ public class DtoTestObject implements Identifiable {
 	 *
 	 * @param test1 New test1.
 	 */
-	public void setTest1(final DtoTestObject2 test1) {
+	public void setTest1(
+			final DtoTestObject2 test1) {
 		this.test1 = test1;
 	}
 
@@ -123,7 +136,8 @@ public class DtoTestObject implements Identifiable {
 	 *
 	 * @param test2 New test2.
 	 */
-	public void setTest2(final List<DtoTestObject2> test2) {
+	public void setTest2(
+			final List<DtoTestObject2> test2) {
 		this.test2 = test2;
 	}
 
@@ -142,7 +156,8 @@ public class DtoTestObject implements Identifiable {
 	 *
 	 * @param test3 New test3.
 	 */
-	public void setTest3(final String test3) {
+	public void setTest3(
+			final String test3) {
 		this.test3 = test3;
 	}
 
@@ -160,7 +175,8 @@ public class DtoTestObject implements Identifiable {
 	 *
 	 * @param test4 New test4.
 	 */
-	public void setTest4(final DtoTestObject2 test4) {
+	public void setTest4(
+			final DtoTestObject2 test4) {
 		this.test4 = test4;
 	}
 
@@ -169,7 +185,10 @@ public class DtoTestObject implements Identifiable {
 	 *
 	 * @return The test5.
 	 */
-	@DtoAttribute(defaultValue = DtoTestObject.TEST_FINAL_ATTR_VALUE, modifiers = { "static", "final" })
+	@DtoAttribute(
+			defaultValue = DtoTestObject.TEST_FINAL_ATTR_VALUE,
+			modifiers = { "static", "final" }
+	)
 	public String getTest5() {
 		return this.test5;
 	}
@@ -179,7 +198,8 @@ public class DtoTestObject implements Identifiable {
 	 *
 	 * @param test5 New test5.
 	 */
-	public void setTest5(final String test5) {
+	public void setTest5(
+			final String test5) {
 		this.test5 = test5;
 	}
 
@@ -197,7 +217,8 @@ public class DtoTestObject implements Identifiable {
 	 *
 	 * @param test6 New test6.
 	 */
-	public void setTest6(final DtoTestObject2[] test6) {
+	public void setTest6(
+			final DtoTestObject2[] test6) {
 		this.test6 = test6;
 	}
 
@@ -215,7 +236,8 @@ public class DtoTestObject implements Identifiable {
 	 *
 	 * @param test7 New test7.
 	 */
-	public void setTest7(final int test7) {
+	public void setTest7(
+			final int test7) {
 		this.test7 = test7;
 	}
 
@@ -235,7 +257,8 @@ public class DtoTestObject implements Identifiable {
 	 *
 	 * @param test8 New test8.
 	 */
-	public void setTest8(final int[] test8) {
+	public void setTest8(
+			final int[] test8) {
 		this.test8 = test8;
 	}
 
@@ -254,8 +277,22 @@ public class DtoTestObject implements Identifiable {
 	 *
 	 * @param test9 New test9.
 	 */
-	public void setTest9(final Integer test9) {
+	public void setTest9(
+			final Integer test9) {
 		this.test9 = test9;
+	}
+
+	/**
+	 * @see org.coldis.library.model.Typable#getTypeName()
+	 */
+	@Override
+	@DtoAttribute(
+			modifiers = { "final" },
+			readOnly = true,
+			defaultValue = DtoTestObject.TYPE_NAME
+	)
+	public String getTypeName() {
+		return DtoTestObject.TYPE_NAME;
 	}
 
 }

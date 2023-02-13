@@ -9,6 +9,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.jsontype.TypeDeserializer;
 
 /**
  * Number deserializer.
@@ -21,7 +22,8 @@ public class NumberDeserializer extends JsonDeserializer<Number> {
 	 * @param  locale Locale to be used.
 	 * @return        The number format.
 	 */
-	protected NumberFormat getNumberFormat(final Locale locale) {
+	protected NumberFormat getNumberFormat(
+			final Locale locale) {
 		return NumberSerializer.getNumberFormat(locale, true, false);
 	}
 
@@ -30,8 +32,9 @@ public class NumberDeserializer extends JsonDeserializer<Number> {
 	 *      com.fasterxml.jackson.databind.DeserializationContext)
 	 */
 	@Override
-	public Number deserialize(final JsonParser parser, final DeserializationContext context)
-			throws IOException, JsonProcessingException {
+	public Number deserialize(
+			final JsonParser parser,
+			final DeserializationContext context) throws IOException, JsonProcessingException {
 		// Gets the number format to be used.
 		final NumberFormat numberFormat = this.getNumberFormat(context.getLocale());
 		// Deserializes the number.
@@ -43,6 +46,19 @@ public class NumberDeserializer extends JsonDeserializer<Number> {
 			// Throws an IO exception.
 			throw new IOException("Could not deserialize object '" + parser.getText() + "'.", exception);
 		}
+	}
+
+	/**
+	 * @see com.fasterxml.jackson.databind.JsonDeserializer#deserializeWithType(com.fasterxml.jackson.core.JsonParser,
+	 *      com.fasterxml.jackson.databind.DeserializationContext,
+	 *      com.fasterxml.jackson.databind.jsontype.TypeDeserializer)
+	 */
+	@Override
+	public Object deserializeWithType(
+			final JsonParser parser,
+			final DeserializationContext context,
+			final TypeDeserializer typeDeserializer) throws IOException {
+		return this.deserialize(parser, context);
 	}
 
 }

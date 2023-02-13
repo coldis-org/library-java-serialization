@@ -10,6 +10,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
 
 /**
  * Number serializer.
@@ -24,7 +25,9 @@ public class NumberSerializer extends JsonSerializer<Number> {
 	 * @param  groupingUsed    If grouping should be used.
 	 * @return                 The number format.
 	 */
-	public static DecimalFormat getNumberFormat(final Locale locale, final Boolean parseBigDecimal,
+	public static DecimalFormat getNumberFormat(
+			final Locale locale,
+			final Boolean parseBigDecimal,
 			final Boolean groupingUsed) {
 		// Creates and returns the number format.
 		final DecimalFormat numberFormat = new DecimalFormat();
@@ -40,7 +43,8 @@ public class NumberSerializer extends JsonSerializer<Number> {
 	 * @param  locale Locale to be used.
 	 * @return        The number format.
 	 */
-	protected NumberFormat getNumberFormat(final Locale locale) {
+	protected NumberFormat getNumberFormat(
+			final Locale locale) {
 		return NumberSerializer.getNumberFormat(locale, true, false);
 	}
 
@@ -59,8 +63,10 @@ public class NumberSerializer extends JsonSerializer<Number> {
 	 *      com.fasterxml.jackson.databind.SerializerProvider)
 	 */
 	@Override
-	public void serialize(final Number value, final JsonGenerator jsonGenerator, final SerializerProvider serializers)
-			throws IOException, JsonProcessingException {
+	public void serialize(
+			final Number value,
+			final JsonGenerator jsonGenerator,
+			final SerializerProvider serializers) throws IOException, JsonProcessingException {
 		// Gets the number format to be used.
 		final NumberFormat numberFormat = this.getNumberFormat(serializers.getLocale());
 		// If the number should be serialized as a number.
@@ -73,6 +79,21 @@ public class NumberSerializer extends JsonSerializer<Number> {
 			// Serializes the number.
 			jsonGenerator.writeString(numberFormat.format(value));
 		}
+	}
+
+	/**
+	 * @see com.fasterxml.jackson.databind.JsonSerializer#serializeWithType(java.lang.Object,
+	 *      com.fasterxml.jackson.core.JsonGenerator,
+	 *      com.fasterxml.jackson.databind.SerializerProvider,
+	 *      com.fasterxml.jackson.databind.jsontype.TypeSerializer)
+	 */
+	@Override
+	public void serializeWithType(
+			final Number value,
+			final JsonGenerator jsonGenerator,
+			final SerializerProvider serializers,
+			final TypeSerializer typeSerializer) throws IOException {
+		this.serialize(value, jsonGenerator, serializers);
 	}
 
 }

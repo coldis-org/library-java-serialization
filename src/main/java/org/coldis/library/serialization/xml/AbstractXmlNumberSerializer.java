@@ -2,7 +2,7 @@ package org.coldis.library.serialization.xml;
 
 import java.text.NumberFormat;
 
-import javax.xml.bind.annotation.adapters.XmlAdapter;
+import jakarta.xml.bind.annotation.adapters.XmlAdapter;
 
 /**
  * XML number serializer.

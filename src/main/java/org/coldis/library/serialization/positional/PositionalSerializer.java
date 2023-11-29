@@ -280,7 +280,7 @@ public class PositionalSerializer<Type> implements PositionalSerializerInterface
 					serializedObject.append(this.filler);
 				}
 				// Serialized field.
-				StringBuffer serializedField = new StringBuffer();
+				StringBuffer serializedFieldValue = new StringBuffer();
 				// Tries to serializes the field.
 				try {
 					// Creates a new instance for the field serializer.
@@ -288,12 +288,13 @@ public class PositionalSerializer<Type> implements PositionalSerializerInterface
 							? fieldContentInfo.positionalSerializerInterface().getConstructor().newInstance()
 							: fieldContentInfo.positionalSerializerInterface().getConstructor(String.class).newInstance(fieldContentInfo.serializerInitParam());
 					// Gets the field getter.
-					final Method getter = MethodUtils.getMatchingMethod(this.objectClass, getterName, (Class<?>[]) null);
+					final Method getter = MethodUtils.getMatchingMethod(this.objectClass, getterName);
 					// Serializes the field content.
-					serializedField = new StringBuffer(serializer.serialize(getter.invoke(object)));
+					final Object fieldValue = getter.invoke(object);
+					serializedFieldValue = new StringBuffer(serializer.serialize(fieldValue));
 					// Truncate the field for the correct maximum size.
-					serializedField = new StringBuffer(
-							StringHelper.truncate(serializedField, fieldContentInfo.finalPosition() - fieldContentInfo.initialPosition(), ""));
+					serializedFieldValue = new StringBuffer(
+							StringHelper.truncate(serializedFieldValue, fieldContentInfo.finalPosition() - fieldContentInfo.initialPosition(), ""));
 				}
 				// If the field cannot be serialized.
 				catch (final Exception exception) {
@@ -311,20 +312,20 @@ public class PositionalSerializer<Type> implements PositionalSerializerInterface
 				// Gets the field filler.
 				final char fieldFiller = PositionalAttribute.NULL_FILLER_HOLDER == fieldContentInfo.filler() ? this.filler : fieldContentInfo.filler();
 				// While the current field length is smaller than defined.
-				while (serializedField.length() < (fieldContentInfo.finalPosition() - fieldContentInfo.initialPosition())) {
+				while (serializedFieldValue.length() < (fieldContentInfo.finalPosition() - fieldContentInfo.initialPosition())) {
 					// If the field should be filled to the right.
 					if (!fieldContentInfo.fillLeft()) {
 						// Appends the filler to the serialized field.
-						serializedField.append(fieldFiller);
+						serializedFieldValue.append(fieldFiller);
 					}
 					// If the field should be filled to the else.
 					else {
 						// Appends the filler to the serialized field.
-						serializedField = new StringBuffer().append(fieldFiller).append(serializedField);
+						serializedFieldValue = new StringBuffer().append(fieldFiller).append(serializedFieldValue);
 					}
 				}
 				// Appends the serialized field to the serialized object.
-				serializedObject.append(serializedField);
+				serializedObject.append(serializedFieldValue);
 			}
 		}
 		// Returns the serialized object.

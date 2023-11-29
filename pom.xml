@@ -34,6 +34,7 @@
 		<project.config.source.test.aspect.phase>none</project.config.source.test.aspect.phase>
 		<project.config.source.test.compile.annotationProcessors>
 			org.coldis.library.dto.DtoGenerator</project.config.source.test.compile.annotationProcessors>
+		<project.config.release.arguments>-Dnet.bytebuddy.experimental=true</project.config.release.arguments>
 	</properties>
 
 	<scm>

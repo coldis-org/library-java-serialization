@@ -17,7 +17,7 @@ public abstract class AbstractXmlNumberSerializer extends XmlAdapter<String, Num
 	protected abstract NumberFormat getNumberFormat();
 
 	/**
-	 * @see javax.xml.bind.annotation.adapters.XmlAdapter#marshal(java.lang.Object)
+	 * @see jakarta.xml.bind.annotation.adapters.XmlAdapter#marshal(java.lang.Object)
 	 */
 	@Override
 	public String marshal(final Number number) throws Exception {
@@ -25,7 +25,7 @@ public abstract class AbstractXmlNumberSerializer extends XmlAdapter<String, Num
 	}
 
 	/**
-	 * @see javax.xml.bind.annotation.adapters.XmlAdapter#unmarshal(java.lang.Object)
+	 * @see jakarta.xml.bind.annotation.adapters.XmlAdapter#unmarshal(java.lang.Object)
 	 */
 	@Override
 	public Number unmarshal(final String number) throws Exception {

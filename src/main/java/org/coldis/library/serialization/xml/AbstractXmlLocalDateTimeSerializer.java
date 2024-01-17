@@ -18,7 +18,7 @@ public abstract class AbstractXmlLocalDateTimeSerializer extends XmlAdapter<Stri
 	protected abstract DateTimeFormatter getDateFormatter();
 
 	/**
-	 * @see javax.xml.bind.annotation.adapters.XmlAdapter#marshal(java.lang.Object)
+	 * @see jakarta.xml.bind.annotation.adapters.XmlAdapter#marshal(java.lang.Object)
 	 */
 	@Override
 	public String marshal(final LocalDateTime date) throws Exception {
@@ -26,7 +26,7 @@ public abstract class AbstractXmlLocalDateTimeSerializer extends XmlAdapter<Stri
 	}
 
 	/**
-	 * @see javax.xml.bind.annotation.adapters.XmlAdapter#unmarshal(java.lang.Object)
+	 * @see jakarta.xml.bind.annotation.adapters.XmlAdapter#unmarshal(java.lang.Object)
 	 */
 	@Override
 	public LocalDateTime unmarshal(final String date) throws Exception {

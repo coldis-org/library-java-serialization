@@ -6,6 +6,8 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.coldis.library.exception.IntegrationException;
 import org.coldis.library.helper.DateTimeHelper;
@@ -64,15 +66,11 @@ public class ObjectMapperHelper {
 	}
 
 	/**
-	 * Adds the subtypes found from in a package to the object mapper.
-	 *
-	 * @param  objectMapper  Object mapper.
-	 * @param  packagesNames The packages to find the subtypes within.
-	 * @return               The configured object mapper.
+	 * Gets classes from packages.
 	 */
-	public static ObjectMapper addSubtypesFromPackage(
-			final ObjectMapper objectMapper,
+	public static Set<Class<?>> getModelClasses(
 			final String... packagesNames) {
+		final Set<Class<?>> classes = new HashSet<>();
 		// Creates a scanner to find class with type name information.
 		final ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(false);
 		scanner.addIncludeFilter(new AnnotationTypeFilter(JsonTypeName.class));
@@ -82,14 +80,42 @@ public class ObjectMapperHelper {
 				for (final BeanDefinition currentCsvType : scanner.findCandidateComponents(packageName)) {
 					// Tries to register it as an object mapper subtype.
 					try {
-						objectMapper.registerSubtypes(Class.forName(currentCsvType.getBeanClassName()));
+						classes.add(Class.forName(currentCsvType.getBeanClassName()));
 					}
 					// If the class cannot be found.
 					catch (final Exception exception) {
 						// Logs it.
-						ObjectMapperHelper.LOGGER.debug("Class '" + currentCsvType.getBeanClassName() + "' could not be registered as a subtype.", exception);
+						ObjectMapperHelper.LOGGER
+								.error("Class '" + currentCsvType.getBeanClassName() + "' could not be added: " + exception.getLocalizedMessage());
+						ObjectMapperHelper.LOGGER.debug("Class '" + currentCsvType.getBeanClassName() + "' could not be added.", exception);
 					}
 				}
+			}
+		}
+		// Returns the classes.
+		return classes;
+	}
+
+	/**
+	 * Adds the subtypes found from in a package to the object mapper.
+	 *
+	 * @param  objectMapper  Object mapper.
+	 * @param  packagesNames The packages to find the subtypes within.
+	 * @return               The configured object mapper.
+	 */
+	public static ObjectMapper addSubtypesFromPackage(
+			final ObjectMapper objectMapper,
+			final String... packagesNames) {
+		for (final Class<?> clazz : ObjectMapperHelper.getModelClasses(packagesNames)) {
+			// Tries to register it as an object mapper subtype.
+			try {
+				objectMapper.registerSubtypes(clazz);
+			}
+			// If the class cannot be found.
+			catch (final Exception exception) {
+				// Logs it.
+				ObjectMapperHelper.LOGGER.debug("Class '" + clazz.getName() + "' could not be registered as a subtype: " + exception.getLocalizedMessage());
+				ObjectMapperHelper.LOGGER.debug("Class '" + clazz.getName() + "' could not be registered as a subtype.", exception);
 			}
 		}
 		// Returns the configured object mapper.

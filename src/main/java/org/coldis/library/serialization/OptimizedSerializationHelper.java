@@ -1,8 +1,6 @@
 package org.coldis.library.serialization;
 
-import java.util.Set;
-
-import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.fury.Fury;
 import org.apache.fury.config.FuryBuilder;
 import org.apache.fury.config.Language;
@@ -20,12 +18,12 @@ public class OptimizedSerializationHelper {
 	 */
 	public static final Fury createSerializer(
 			final Language language,
-			final Set<Class<?>> classes) {
+			final String... packagesNames) {
 		final FuryBuilder furyBuilder = Fury.builder().withLanguage(language);
-		furyBuilder.requireClassRegistration(CollectionUtils.isNotEmpty(classes));
+		furyBuilder.requireClassRegistration(ArrayUtils.isNotEmpty(packagesNames));
 		final Fury fury = furyBuilder.build();
-		if (CollectionUtils.isNotEmpty(classes)) {
-			classes.forEach(fury::register);
+		if (ArrayUtils.isNotEmpty(packagesNames)) {
+			ObjectMapperHelper.getModelClasses(packagesNames).forEach(fury::register);
 		}
 		return fury;
 	}

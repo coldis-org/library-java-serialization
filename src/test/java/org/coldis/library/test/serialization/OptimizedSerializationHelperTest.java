@@ -2,7 +2,7 @@ package org.coldis.library.test.serialization;
 
 import java.util.List;
 
-import org.apache.fury.Fury;
+import org.apache.fury.BaseFury;
 import org.apache.fury.config.Language;
 import org.coldis.library.serialization.OptimizedSerializationHelper;
 import org.coldis.library.test.serialization.dto.DtoTestObject2Dto;
@@ -27,7 +27,7 @@ public class OptimizedSerializationHelperTest {
 	/**
 	 * Object mapper.
 	 */
-	private final Fury serializer = OptimizedSerializationHelper.createSerializer(Language.JAVA);
+	private final BaseFury serializer = OptimizedSerializationHelper.createSerializer(true, 1, 1, Language.JAVA);
 
 	/**
 	 * Tests object serialization.

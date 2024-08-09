@@ -29,26 +29,13 @@ public class OptimizedSerializationHelper {
 		final FuryBuilder furyBuilder = Fury.builder().withLanguage(language).withCompatibleMode(CompatibleMode.COMPATIBLE);
 		furyBuilder.requireClassRegistration(ArrayUtils.isNotEmpty(packagesNames));
 		final BaseFury fury = (threadSafe
-				? (((minPoolSize != null) && (maxPoolSize != null)) ? furyBuilder.buildThreadSafeFury() : furyBuilder.buildThreadSafeFury())
+				? (((minPoolSize != null) && (maxPoolSize != null)) ? furyBuilder.buildThreadSafeFuryPool(minPoolSize, maxPoolSize) : furyBuilder.buildThreadSafeFury())
 				: furyBuilder.build());
 		if (ArrayUtils.isNotEmpty(packagesNames)) {
 			final Set<Class<?>> modelClasses = ObjectMapperHelper.getModelClasses(packagesNames);
 			modelClasses.forEach(fury::register);
 		}
 		return fury;
-	}
-
-	/**
-	 * @param  <TargetType> Target type.
-	 * @param  fury         Fury.
-	 * @param  object       Object.
-	 * @return              Deep clone.
-	 */
-	@SuppressWarnings("unchecked")
-	public static <TargetType> TargetType deepClone(
-			final Fury fury,
-			final TargetType object) {
-		return (TargetType) fury.deserialize(fury.serialize(object));
 	}
 
 }

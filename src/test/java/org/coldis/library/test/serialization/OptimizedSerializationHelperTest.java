@@ -27,7 +27,7 @@ public class OptimizedSerializationHelperTest {
 	/**
 	 * Object mapper.
 	 */
-	private final Fury serializer = OptimizedSerializationHelper.createSerializer(Language.XLANG);
+	private final Fury serializer = OptimizedSerializationHelper.createSerializer(Language.JAVA);
 
 	/**
 	 * Tests object serialization.
@@ -42,8 +42,8 @@ public class OptimizedSerializationHelperTest {
 			long start = System.currentTimeMillis();
 			final byte[] serializedObject1 = this.serializer.serialize(originalDto);
 			final DtoTestObjectDto originalObject1 = (DtoTestObjectDto) this.serializer.deserialize(serializedObject1);
-			final byte[] reserializedObject1 = this.serializer.serializeJavaObject(originalObject1);
-			final DtoTestObjectDto reconvertedDto1 = this.serializer.deserializeJavaObject(reserializedObject1, DtoTestObjectDto.class);
+			final byte[] reserializedObject1 = this.serializer.serialize(originalObject1);
+			final DtoTestObjectDto reconvertedDto1 = (DtoTestObjectDto) this.serializer.deserialize(reserializedObject1);
 			System.out.println("Serialization and deserialization took " + (System.currentTimeMillis() - start) + "ms.");
 
 			start = System.currentTimeMillis();

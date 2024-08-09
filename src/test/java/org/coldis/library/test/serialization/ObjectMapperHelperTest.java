@@ -75,29 +75,37 @@ public class ObjectMapperHelperTest {
 		// For each test data.
 		for (final DtoTestObjectDto originalDto : ObjectMapperHelperTest.TEST_DATA) {
 			// Converts the DTO to the original object and back.
+			long start = System.currentTimeMillis();
 			final String serializedObject1 = ObjectMapperHelper.serialize(this.objectMapper, originalDto, null, false);
 			final DtoTestObject originalObject1 = ObjectMapperHelper.deserialize(this.objectMapper, serializedObject1, DtoTestObject.class, false);
 			final String reserializedObject1 = ObjectMapperHelper.serialize(this.objectMapper, originalObject1, null, false);
 			final DtoTestObjectDto reconvertedDto1 = ObjectMapperHelper.deserialize(this.objectMapper, reserializedObject1, DtoTestObjectDto.class, false);
+			System.out.println("Serialization and deserialization took " + (System.currentTimeMillis() - start) + "ms.");
 
+			start = System.currentTimeMillis();
 			final String serializedObject2 = ObjectMapperHelper.serialize(this.objectMapper, originalDto, null, false);
 			final DtoTestObject originalObject2 = ObjectMapperHelper.deserialize(this.objectMapper, serializedObject2, new TypeReference<DtoTestObject>() {},
 					false);
 			final String reserializedObject2 = ObjectMapperHelper.serialize(this.objectMapper, originalObject2, null, false);
 			final DtoTestObjectDto reconvertedDto2 = ObjectMapperHelper.deserialize(this.objectMapper, reserializedObject2,
 					new TypeReference<DtoTestObjectDto>() {}, false);
+			System.out.println("Serialization and deserialization took " + (System.currentTimeMillis() - start) + "ms.");
 
+			start = System.currentTimeMillis();
 			final String serializedObject3 = ObjectMapperHelper.serialize(this.objectMapper, originalDto, null, false);
 			final DtoTestObject originalObject3 = ObjectMapperHelper.deserialize(this.objectMapper, serializedObject3, DtoTestObject.class, true);
 			final String reserializedObject3 = ObjectMapperHelper.serialize(this.objectMapper, originalObject3, null, false);
 			final DtoTestObjectDto reconvertedDto3 = ObjectMapperHelper.deserialize(this.objectMapper, reserializedObject3, DtoTestObjectDto.class, true);
+			System.out.println("Serialization and deserialization took " + (System.currentTimeMillis() - start) + "ms.");
 
+			start = System.currentTimeMillis();
 			final String serializedObject4 = ObjectMapperHelper.serialize(this.objectMapper, originalDto, null, false);
 			final DtoTestObject originalObject4 = ObjectMapperHelper.deserialize(this.objectMapper, serializedObject4, new TypeReference<DtoTestObject>() {},
 					true);
 			final String reserializedObject4 = ObjectMapperHelper.serialize(this.objectMapper, originalObject4, null, false);
 			final DtoTestObjectDto reconvertedDto4 = ObjectMapperHelper.deserialize(this.objectMapper, reserializedObject4,
 					new TypeReference<DtoTestObjectDto>() {}, false);
+			System.out.println("Serialization and deserialization took " + (System.currentTimeMillis() - start) + "ms.");
 
 			// The DTO should remain the same.
 			Assertions.assertEquals(originalDto, reconvertedDto1);

@@ -2,6 +2,7 @@ package org.coldis.library.serialization;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.fury.Fury;
+import org.apache.fury.config.CompatibleMode;
 import org.apache.fury.config.FuryBuilder;
 import org.apache.fury.config.Language;
 
@@ -19,7 +20,7 @@ public class OptimizedSerializationHelper {
 	public static final Fury createSerializer(
 			final Language language,
 			final String... packagesNames) {
-		final FuryBuilder furyBuilder = Fury.builder().withLanguage(language);
+		final FuryBuilder furyBuilder = Fury.builder().withLanguage(language).withCompatibleMode(CompatibleMode.COMPATIBLE);
 		furyBuilder.requireClassRegistration(ArrayUtils.isNotEmpty(packagesNames));
 		final Fury fury = furyBuilder.build();
 		if (ArrayUtils.isNotEmpty(packagesNames)) {

@@ -6,9 +6,10 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
+import org.coldis.library.dto.DtoOrigin;
 import org.coldis.library.exception.IntegrationException;
 import org.coldis.library.helper.DateTimeHelper;
 import org.coldis.library.model.SimpleMessage;
@@ -18,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
+import org.springframework.core.type.filter.TypeFilter;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -68,26 +70,27 @@ public class ObjectMapperHelper {
 	/**
 	 * Gets classes from packages.
 	 */
-	public static Set<Class<?>> getModelClasses(
+	public static Map<Class<?>, String> getModelClasses(
+			TypeFilter filter,
 			final String... packagesNames) {
-		final Set<Class<?>> classes = new HashSet<>();
-		// Creates a scanner to find class with type name information.
-		final ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(false);
-		scanner.addIncludeFilter(new AnnotationTypeFilter(JsonTypeName.class));
-		// For each package and found type.
+		final Map<Class<?>, String> classes = new HashMap<>();
+		// Adds class for each JSON type.
+		final ClassPathScanningCandidateComponentProvider jsonScanner = new ClassPathScanningCandidateComponentProvider(false);
+		jsonScanner.addIncludeFilter(filter);
 		if (packagesNames != null) {
 			for (final String packageName : packagesNames) {
-				for (final BeanDefinition currentCsvType : scanner.findCandidateComponents(packageName)) {
+				for (final BeanDefinition currentType : jsonScanner.findCandidateComponents(packageName)) {
 					// Tries to register it as an object mapper subtype.
 					try {
-						classes.add(Class.forName(currentCsvType.getBeanClassName()));
+						final Class<?> clazz = Class.forName(currentType.getBeanClassName());
+						classes.put(clazz, clazz.getName());
 					}
 					// If the class cannot be found.
 					catch (final Exception exception) {
 						// Logs it.
 						ObjectMapperHelper.LOGGER
-								.error("Class '" + currentCsvType.getBeanClassName() + "' could not be added: " + exception.getLocalizedMessage());
-						ObjectMapperHelper.LOGGER.debug("Class '" + currentCsvType.getBeanClassName() + "' could not be added.", exception);
+								.error("Class '" + currentType.getBeanClassName() + "' could not be added: " + exception.getLocalizedMessage());
+						ObjectMapperHelper.LOGGER.debug("Class '" + currentType.getBeanClassName() + "' could not be added.", exception);
 					}
 				}
 			}
@@ -106,7 +109,7 @@ public class ObjectMapperHelper {
 	public static ObjectMapper addSubtypesFromPackage(
 			final ObjectMapper objectMapper,
 			final String... packagesNames) {
-		for (final Class<?> clazz : ObjectMapperHelper.getModelClasses(packagesNames)) {
+		for (final Class<?> clazz : ObjectMapperHelper.getModelClasses(new AnnotationTypeFilter(JsonTypeName.class), packagesNames).keySet()) {
 			// Tries to register it as an object mapper subtype.
 			try {
 				objectMapper.registerSubtypes(clazz);

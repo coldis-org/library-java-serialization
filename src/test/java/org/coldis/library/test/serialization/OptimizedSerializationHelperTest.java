@@ -2,8 +2,9 @@ package org.coldis.library.test.serialization;
 
 import java.util.List;
 
-import org.apache.fury.BaseFury;
+import org.apache.fury.Fury;
 import org.apache.fury.config.Language;
+import org.apache.fury.resolver.MetaContext;
 import org.coldis.library.serialization.OptimizedSerializationHelper;
 import org.coldis.library.test.serialization.dto.DtoTestObject2Dto;
 import org.coldis.library.test.serialization.dto.DtoTestObjectDto;
@@ -27,7 +28,23 @@ public class OptimizedSerializationHelperTest {
 	/**
 	 * Object mapper.
 	 */
-	private final BaseFury serializer = OptimizedSerializationHelper.createSerializer(true, 1, 1, Language.JAVA);
+	private static Fury serializer1;
+
+	/**
+	 * Object mapper.
+	 */
+	private static Fury serializer2;
+
+	static {
+		OptimizedSerializationHelperTest.serializer1 = (Fury) OptimizedSerializationHelper.createSerializer(false, null, null, Language.XLANG,
+				"org.coldis.library.test.serializationX");
+		OptimizedSerializationHelperTest.serializer1.register(DtoTestObjectDto.class, DtoTestObject.class.getName());
+		OptimizedSerializationHelperTest.serializer1.register(DtoTestObject2Dto.class, DtoTestObject2.class.getName());
+		OptimizedSerializationHelperTest.serializer2 = (Fury) OptimizedSerializationHelper.createSerializer(false, null, null, Language.XLANG,
+				"org.coldis.library.test.serializationX");
+		OptimizedSerializationHelperTest.serializer2.register(DtoTestObject.class, DtoTestObject.class.getName());
+		OptimizedSerializationHelperTest.serializer2.register(DtoTestObject2.class, DtoTestObject2.class.getName());
+	}
 
 	/**
 	 * Tests object serialization.
@@ -40,31 +57,31 @@ public class OptimizedSerializationHelperTest {
 		for (final DtoTestObjectDto originalDto : OptimizedSerializationHelperTest.TEST_DATA) {
 			// Converts the DTO to the original object and back.
 			long start = System.currentTimeMillis();
-			final byte[] serializedObject1 = this.serializer.serialize(originalDto);
-			final DtoTestObjectDto originalObject1 = (DtoTestObjectDto) this.serializer.deserialize(serializedObject1);
-			final byte[] reserializedObject1 = this.serializer.serialize(originalObject1);
-			final DtoTestObjectDto reconvertedDto1 = (DtoTestObjectDto) this.serializer.deserialize(reserializedObject1);
+			final byte[] serializedObject1 = OptimizedSerializationHelperTest.serializer1.serialize(originalDto);
+			final DtoTestObject originalObject1 = (DtoTestObject) OptimizedSerializationHelperTest.serializer2.deserialize(serializedObject1);
+			final byte[] reserializedObject1 = OptimizedSerializationHelperTest.serializer2.serialize(originalObject1);
+			final DtoTestObjectDto reconvertedDto1 = (DtoTestObjectDto) OptimizedSerializationHelperTest.serializer1.deserialize(reserializedObject1);
 			System.out.println("Serialization and deserialization took " + (System.currentTimeMillis() - start) + "ms.");
 
 			start = System.currentTimeMillis();
-			final byte[] serializedObject2 = this.serializer.serialize(originalDto);
-			final DtoTestObjectDto originalObject2 = (DtoTestObjectDto) this.serializer.deserialize(serializedObject2);
-			final byte[] reserializedObject2 = this.serializer.serialize(originalObject2);
-			final DtoTestObjectDto reconvertedDto2 = (DtoTestObjectDto) this.serializer.deserialize(reserializedObject2);
+			final byte[] serializedObject2 = OptimizedSerializationHelperTest.serializer1.serialize(originalDto);
+			final DtoTestObjectDto originalObject2 = (DtoTestObjectDto) OptimizedSerializationHelperTest.serializer1.deserialize(serializedObject2);
+			final byte[] reserializedObject2 = OptimizedSerializationHelperTest.serializer1.serialize(originalObject2);
+			final DtoTestObjectDto reconvertedDto2 = (DtoTestObjectDto) OptimizedSerializationHelperTest.serializer1.deserialize(reserializedObject2);
 			System.out.println("Serialization and deserialization took " + (System.currentTimeMillis() - start) + "ms.");
 
 			start = System.currentTimeMillis();
-			final byte[] serializedObject3 = this.serializer.serialize(originalDto);
-			final DtoTestObjectDto originalObject3 = (DtoTestObjectDto) this.serializer.deserialize(serializedObject3);
-			final byte[] reserializedObject3 = this.serializer.serialize(originalObject3);
-			final DtoTestObjectDto reconvertedDto3 = (DtoTestObjectDto) this.serializer.deserialize(reserializedObject3);
+			final byte[] serializedObject3 = OptimizedSerializationHelperTest.serializer1.serialize(originalDto);
+			final DtoTestObjectDto originalObject3 = (DtoTestObjectDto) OptimizedSerializationHelperTest.serializer1.deserialize(serializedObject3);
+			final byte[] reserializedObject3 = OptimizedSerializationHelperTest.serializer1.serialize(originalObject3);
+			final DtoTestObjectDto reconvertedDto3 = (DtoTestObjectDto) OptimizedSerializationHelperTest.serializer1.deserialize(reserializedObject3);
 			System.out.println("Serialization and deserialization took " + (System.currentTimeMillis() - start) + "ms.");
 
 			start = System.currentTimeMillis();
-			final byte[] serializedObject4 = this.serializer.serialize(originalDto);
-			final DtoTestObjectDto originalObject4 = (DtoTestObjectDto) this.serializer.deserialize(serializedObject4);
-			final byte[] reserializedObject4 = this.serializer.serialize(originalObject4);
-			final DtoTestObjectDto reconvertedDto4 = (DtoTestObjectDto) this.serializer.deserialize(reserializedObject4);
+			final byte[] serializedObject4 = OptimizedSerializationHelperTest.serializer1.serialize(originalDto);
+			final DtoTestObjectDto originalObject4 = (DtoTestObjectDto) OptimizedSerializationHelperTest.serializer1.deserialize(serializedObject4);
+			final byte[] reserializedObject4 = OptimizedSerializationHelperTest.serializer1.serialize(originalObject4);
+			final DtoTestObjectDto reconvertedDto4 = (DtoTestObjectDto) OptimizedSerializationHelperTest.serializer1.deserialize(reserializedObject4);
 			System.out.println("Serialization and deserialization took " + (System.currentTimeMillis() - start) + "ms.");
 
 			// The DTO should remain the same.

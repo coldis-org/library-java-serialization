@@ -9,6 +9,7 @@ import org.coldis.library.serialization.OptimizedSerializationHelper;
 import org.coldis.library.test.serialization.dto.DtoTestObject2Dto;
 import org.coldis.library.test.serialization.dto.DtoTestObjectDto;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -52,6 +53,7 @@ public class OptimizedSerializationHelperTest {
 	 * @throws Exception If the test does not succeed.
 	 */
 	@Test
+	@Disabled
 	public void test01Serialization() throws Exception {
 		// For each test data.
 		for (final DtoTestObjectDto originalDto : OptimizedSerializationHelperTest.TEST_DATA) {

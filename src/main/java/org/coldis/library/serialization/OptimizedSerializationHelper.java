@@ -12,6 +12,8 @@ import org.apache.fury.Fury;
 import org.apache.fury.config.CompatibleMode;
 import org.apache.fury.config.FuryBuilder;
 import org.apache.fury.config.Language;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.type.AnnotationMetadata;
@@ -28,6 +30,11 @@ import org.springframework.util.ClassUtils;
  * Optimized serialization helper.
  */
 public class OptimizedSerializationHelper {
+
+	/**
+	 * Logger.
+	 */
+	private static final Logger LOGGER = LoggerFactory.getLogger(OptimizedSerializationHelper.class);
 
 	/**
 	 * No annotation type filter.
@@ -131,6 +138,8 @@ public class OptimizedSerializationHelper {
 							new OptimizedSerializationHelper.NoAnnotationTypeFilter(
 									Set.of(Component.class, Controller.class, Service.class, Repository.class, Configuration.class), true, true),
 							packagesNames));
+			OptimizedSerializationHelper.LOGGER.info("Registering {} classes in optimized serialization.", modelClasses.size());
+			OptimizedSerializationHelper.LOGGER.debug("Classes reistered: {}", modelClasses.keySet().stream().map(Class::getName).toArray());
 			modelClasses.forEach((
 					clazz,
 					className) -> {

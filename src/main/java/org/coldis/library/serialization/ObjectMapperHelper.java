@@ -8,8 +8,8 @@ import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
-import org.coldis.library.dto.DtoOrigin;
 import org.coldis.library.exception.IntegrationException;
 import org.coldis.library.helper.DateTimeHelper;
 import org.coldis.library.model.SimpleMessage;
@@ -71,7 +71,7 @@ public class ObjectMapperHelper {
 	 * Gets classes from packages.
 	 */
 	public static Map<Class<?>, String> getModelClasses(
-			TypeFilter filter,
+			final TypeFilter filter,
 			final String... packagesNames) {
 		final Map<Class<?>, String> classes = new HashMap<>();
 		// Adds class for each JSON type.
@@ -79,19 +79,26 @@ public class ObjectMapperHelper {
 		jsonScanner.addIncludeFilter(filter);
 		if (packagesNames != null) {
 			for (final String packageName : packagesNames) {
-				for (final BeanDefinition currentType : jsonScanner.findCandidateComponents(packageName)) {
-					// Tries to register it as an object mapper subtype.
-					try {
-						final Class<?> clazz = Class.forName(currentType.getBeanClassName());
-						classes.put(clazz, clazz.getName());
+				try {
+					final Set<BeanDefinition> types = jsonScanner.findCandidateComponents(packageName);
+					for (final BeanDefinition currentType : types) {
+						// Tries to register it as an object mapper subtype.
+						try {
+							final Class<?> clazz = Class.forName(currentType.getBeanClassName());
+							classes.put(clazz, clazz.getName());
+						}
+						// If the class cannot be found.
+						catch (final Exception exception) {
+							// Logs it.
+							ObjectMapperHelper.LOGGER
+									.error("Class '" + currentType.getBeanClassName() + "' could not be added: " + exception.getLocalizedMessage());
+							ObjectMapperHelper.LOGGER.debug("Class '" + currentType.getBeanClassName() + "' could not be added.", exception);
+						}
 					}
-					// If the class cannot be found.
-					catch (final Exception exception) {
-						// Logs it.
-						ObjectMapperHelper.LOGGER
-								.error("Class '" + currentType.getBeanClassName() + "' could not be added: " + exception.getLocalizedMessage());
-						ObjectMapperHelper.LOGGER.debug("Class '" + currentType.getBeanClassName() + "' could not be added.", exception);
-					}
+				}
+				catch (final Exception exception) {
+					ObjectMapperHelper.LOGGER.error("Error scanning package  '" + packageName + "': " + exception.getLocalizedMessage());
+					ObjectMapperHelper.LOGGER.debug("Error scanning package  '" + packageName + "'.", exception);
 				}
 			}
 		}

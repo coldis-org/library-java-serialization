@@ -1,5 +1,7 @@
 package org.coldis.library.serialization;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -14,6 +16,8 @@ import org.coldis.library.exception.IntegrationException;
 import org.coldis.library.helper.DateTimeHelper;
 import org.coldis.library.model.SimpleMessage;
 import org.coldis.library.serialization.json.GenericDateTimeDeserializer;
+import org.coldis.library.serialization.json.SensitiveFieldDeserializer;
+import org.coldis.library.serialization.json.SensitiveFieldSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -25,6 +29,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.datatype.jsr310.deser.InstantDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
@@ -65,6 +70,27 @@ public class ObjectMapperHelper {
 				.addDeserializer(ZonedDateTime.class, zonedDateTimeDeserializer).addDeserializer(Instant.class, instantDeserializer);
 		// Returns the module.
 		return javaTimeModule;
+	}
+
+	/**
+	 * Number serialization classes.
+	 */
+	private static final Set<Class<? extends Number>> NUMBER_CLASSES = Set.of(Number.class, Integer.class, Long.class, Byte.class, Short.class, Double.class,
+			Float.class, BigDecimal.class, BigInteger.class);
+
+	/**
+	 * Gets the sensitive fields serialization module.
+	 *
+	 * @return
+	 */
+	public static SimpleModule getSensitiveFieldModule(
+			final ObjectMapper objectMapper) {
+		final SimpleModule sensitiveFieldModule = new SimpleModule();
+		ObjectMapperHelper.NUMBER_CLASSES.forEach(numberClass -> sensitiveFieldModule.addSerializer(numberClass, new SensitiveFieldSerializer<>()));
+		sensitiveFieldModule.addSerializer(String.class, new SensitiveFieldSerializer<>());
+		ObjectMapperHelper.NUMBER_CLASSES.forEach(numberClass -> sensitiveFieldModule.addDeserializer(numberClass, new SensitiveFieldDeserializer<>()));
+		sensitiveFieldModule.addDeserializer(String.class, new SensitiveFieldDeserializer<>());
+		return sensitiveFieldModule;
 	}
 
 	/**
@@ -133,17 +159,30 @@ public class ObjectMapperHelper {
 	}
 
 	/**
+	 * Configures the object mapper.
+	 *
+	 * @param  objectMapper  Object mapper.
+	 * @param  packagesNames Packages names to add subtypes from.
+	 * @return               Object mapper.
+	 */
+	public static ObjectMapper configureMapper(
+			final ObjectMapper objectMapper,
+			final String... packagesNames) {
+		objectMapper.registerModule(ObjectMapperHelper.getDateTimeModule());
+		objectMapper.registerModule(ObjectMapperHelper.getSensitiveFieldModule(objectMapper));
+		ObjectMapperHelper.addSubtypesFromPackage(objectMapper, packagesNames);
+		return objectMapper;
+	}
+
+	/**
 	 * Creates the object mapper.
 	 *
-	 * @return Object mapper.
+	 * @param  packagesNames Packages names to add subtypes from.
+	 * @return               Object mapper.
 	 */
-	public static ObjectMapper createMapper() {
-		// Creates the object mapper.
-		final ObjectMapper objectMapper = new ObjectMapper();
-		// Registers the date/time module.
-		objectMapper.registerModule(ObjectMapperHelper.getDateTimeModule());
-		// Returns the object mapper.
-		return objectMapper;
+	public static ObjectMapper createMapper(
+			final String... packagesNames) {
+		return ObjectMapperHelper.configureMapper(new ObjectMapper());
 	}
 
 	/**

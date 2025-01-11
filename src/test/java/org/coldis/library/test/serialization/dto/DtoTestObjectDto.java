@@ -62,6 +62,16 @@ public class DtoTestObjectDto implements Serializable {
 	private java.lang.Integer test9;
 
 	/**
+	 * test10.
+	 */
+	private java.lang.Integer test10;
+
+	/**
+	 * test11.
+	 */
+	private java.lang.String test11;
+
+	/**
 	 * typeName.
 	 */
 	private final java.lang.String typeName = "org.coldis.library.test.serialization.DtoTestObject";
@@ -324,6 +334,66 @@ public class DtoTestObjectDto implements Serializable {
 		return this;
 	}
 	/**
+	 * Gets the test10.
+	 * @return The test10.
+	 */
+	@com.fasterxml.jackson.annotation.JsonView({org.coldis.library.model.view.ModelView.Personal.class, org.coldis.library.model.view.ModelView.Public.class})
+	public java.lang.Integer getTest10() {
+		return test10;
+	}
+	
+	/**
+	 * Sets the test10.
+	 *
+	 * @param test10
+	 *            The test10.
+	 */
+	public void setTest10(final java.lang.Integer test10) {
+		this.test10 = test10;
+	}
+	
+	/**
+	 * Sets the test10 and returns the updated object.
+	 *
+	 * @param test10
+	 *            The test10.
+	 * @return The updated object.
+	 */
+	public DtoTestObjectDto withTest10(final java.lang.Integer test10) {
+		this.setTest10(test10);
+		return this;
+	}
+	/**
+	 * Gets the test11.
+	 * @return The test11.
+	 */
+	@com.fasterxml.jackson.annotation.JsonView({org.coldis.library.model.view.ModelView.Sensitive.class, org.coldis.library.model.view.ModelView.Public.class})
+	public java.lang.String getTest11() {
+		return test11;
+	}
+	
+	/**
+	 * Sets the test11.
+	 *
+	 * @param test11
+	 *            The test11.
+	 */
+	public void setTest11(final java.lang.String test11) {
+		this.test11 = test11;
+	}
+	
+	/**
+	 * Sets the test11 and returns the updated object.
+	 *
+	 * @param test11
+	 *            The test11.
+	 * @return The updated object.
+	 */
+	public DtoTestObjectDto withTest11(final java.lang.String test11) {
+		this.setTest11(test11);
+		return this;
+	}
+	/**
 	 * Gets the typeName.
 	 * @return The typeName.
 	 */
@@ -358,6 +428,8 @@ test5
 
 ,
 test7
+
+
 
 
 

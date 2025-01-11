@@ -6,9 +6,11 @@ import org.coldis.library.dto.DtoAttribute;
 import org.coldis.library.dto.DtoType;
 import org.coldis.library.model.Identifiable;
 import org.coldis.library.model.Typable;
+import org.coldis.library.model.view.ModelView;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.annotation.JsonView;
 
 /**
  * DTO test object.
@@ -84,6 +86,16 @@ public class DtoTestObject implements Identifiable, Typable {
 	 * Test attribute.
 	 */
 	private Integer test9;
+
+	/**
+	 * Test attribute.
+	 */
+	private Integer test10;
+
+	/**
+	 * Test attribute.
+	 */
+	private String test11;
 
 	/**
 	 * @see org.coldis.library.model.Identifiable#getId()
@@ -280,6 +292,48 @@ public class DtoTestObject implements Identifiable, Typable {
 	public void setTest9(
 			final Integer test9) {
 		this.test9 = test9;
+	}
+
+	/**
+	 * Gets the test10.
+	 *
+	 * @return The test10.
+	 */
+	@JsonView(value = { ModelView.Personal.class, ModelView.Public.class })
+	@DtoAttribute(usedInComparison = false)
+	public Integer getTest10() {
+		return this.test10;
+	}
+
+	/**
+	 * Sets the test10.
+	 *
+	 * @param test10 New test10.
+	 */
+	public void setTest10(
+			final Integer test10) {
+		this.test10 = test10;
+	}
+
+	/**
+	 * Gets the test11.
+	 *
+	 * @return The test11.
+	 */
+	@JsonView(value = { ModelView.Sensitive.class, ModelView.Public.class })
+	@DtoAttribute(usedInComparison = false)
+	public String getTest11() {
+		return this.test11;
+	}
+
+	/**
+	 * Sets the test11.
+	 *
+	 * @param test11 New test11.
+	 */
+	public void setTest11(
+			final String test11) {
+		this.test11 = test11;
 	}
 
 	/**

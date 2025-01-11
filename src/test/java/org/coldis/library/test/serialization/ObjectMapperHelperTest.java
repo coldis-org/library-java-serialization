@@ -2,6 +2,7 @@ package org.coldis.library.test.serialization;
 
 import java.util.List;
 
+import org.coldis.library.model.view.ModelView;
 import org.coldis.library.serialization.ObjectMapperHelper;
 import org.coldis.library.test.serialization.dto.DtoTestObject2Dto;
 import org.coldis.library.test.serialization.dto.DtoTestObjectDto;
@@ -24,7 +25,7 @@ public class ObjectMapperHelperTest {
 			.withTest2(List.of(new DtoTestObject2Dto().withId(2L).withTest("test2"), new DtoTestObject2Dto().withId(3L).withTest("test3")))
 			.withTest4(new DtoTestObject2Dto().withId(4L).withTest("test4"))
 			.withTest6(new DtoTestObject2Dto[] { new DtoTestObject2Dto().withId(5L).withTest("test5"), new DtoTestObject2Dto().withId(6L).withTest("test6") })
-			.withTest7(7).withTest88(new int[] { 2, 3, 4 }).withTest9(9) };
+			.withTest7(7).withTest88(new int[] { 2, 3, 4 }).withTest9(9).withTest10(1000000000).withTest11("Romulo Valente Coutinho") };
 
 	/**
 	 * Object mapper.
@@ -119,6 +120,43 @@ public class ObjectMapperHelperTest {
 			Assertions.assertNull(ObjectMapperHelper.deserialize(null, serializedObject1, new TypeReference<DtoTestObject>() {}, true));
 
 		}
+	}
+
+	/**
+	 * Test sensitive field serialization.
+	 */
+	@Test
+	public void testSensitiveFieldSerialization() throws Exception {
+		// Tests sensitive field serialization using no JSON view.
+		final String serializedObject1 = ObjectMapperHelper.serialize(this.objectMapper, ObjectMapperHelperTest.TEST_DATA[0], null, false);
+		final DtoTestObject originalObject1 = ObjectMapperHelper.deserialize(this.objectMapper, serializedObject1, DtoTestObject.class, false);
+		Assertions.assertTrue(serializedObject1.contains("\"test10\":\"100+-+-+-+000\""));
+		Assertions.assertTrue(serializedObject1.contains("\"test11\":\"-+-+-+-+-+-+-\""));
+		Assertions.assertEquals(null, originalObject1.getTest10());
+		Assertions.assertEquals(null, originalObject1.getTest11());
+
+		// Tests sensitive field serialization using Public JSON view.
+		final String serializedObject2 = ObjectMapperHelper.serialize(this.objectMapper, ObjectMapperHelperTest.TEST_DATA[0], ModelView.Public.class, false);
+		final DtoTestObject originalObject2 = ObjectMapperHelper.deserialize(this.objectMapper, serializedObject2, DtoTestObject.class, false);
+		Assertions.assertTrue(serializedObject2.contains("\"test10\":\"100+-+-+-+000\""));
+		Assertions.assertTrue(serializedObject2.contains("\"test11\":\"-+-+-+-+-+-+-\""));
+		Assertions.assertEquals(null, originalObject2.getTest10());
+		Assertions.assertEquals(null, originalObject2.getTest11());
+
+		// Tests sensitive field serialization using PublicAndPersonal JSON view.
+		final String serializedObject3 = ObjectMapperHelper.serialize(this.objectMapper, ObjectMapperHelperTest.TEST_DATA[0], ModelView.PublicAndPersonal.class,
+				false);
+		final DtoTestObject originalObject3 = ObjectMapperHelper.deserialize(this.objectMapper, serializedObject3, DtoTestObject.class, false);
+		Assertions.assertTrue(serializedObject3.contains("\"test11\":\"-+-+-+-+-+-+-\""));
+		Assertions.assertEquals(ObjectMapperHelperTest.TEST_DATA[0].getTest10(), originalObject3.getTest10());
+		Assertions.assertEquals(null, originalObject3.getTest11());
+
+		// Tests sensitive field serialization using PublicAndSensitive JSON view.
+		final String serializedObject4 = ObjectMapperHelper.serialize(this.objectMapper, ObjectMapperHelperTest.TEST_DATA[0],
+				ModelView.PublicAndSensitive.class, false);
+		final DtoTestObject originalObject4 = ObjectMapperHelper.deserialize(this.objectMapper, serializedObject4, DtoTestObject.class, false);
+		Assertions.assertEquals(ObjectMapperHelperTest.TEST_DATA[0].getTest10(), originalObject4.getTest10());
+		Assertions.assertEquals(ObjectMapperHelperTest.TEST_DATA[0].getTest11(), originalObject4.getTest11());
 	}
 
 }

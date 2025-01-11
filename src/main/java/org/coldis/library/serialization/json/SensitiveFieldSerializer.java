@@ -89,7 +89,7 @@ public class SensitiveFieldSerializer<Type> extends JsonSerializer<Type> impleme
 		// Default serializer is the String serializer.
 		this.delegate = (JsonSerializer<Type>) new StringSerializer();
 		// If it is a number, uses the number serializer.
-		if (property.getType().isTypeOrSubTypeOf(Number.class)) {
+		if ((property != null) && property.getType().isTypeOrSubTypeOf(Number.class)) {
 			final JsonSerializer<?> numberSerializer = SensitiveFieldSerializer.NUMBER_SERIALIZERS.get(property.getType().getRawClass().getName());
 			if (numberSerializer != null) {
 				this.delegate = (JsonSerializer<Type>) numberSerializer;

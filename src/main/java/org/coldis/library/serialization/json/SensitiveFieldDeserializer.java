@@ -47,7 +47,7 @@ public class SensitiveFieldDeserializer<Type> extends JsonDeserializer<Type> imp
 			final BeanProperty property) throws JsonMappingException {
 
 		// Gets the view for the field.
-		final JsonView propertyJsonView = property.getAnnotation(JsonView.class);
+		final JsonView propertyJsonView = (property == null ? null : property.getAnnotation(JsonView.class));
 		final boolean sensitiveField = (propertyJsonView != null)
 				&& Arrays.stream(propertyJsonView.value()).anyMatch(view -> ModelView.Sensitive.class.isAssignableFrom(view));
 		final boolean personalFields = (propertyJsonView != null)

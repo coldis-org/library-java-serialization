@@ -24,11 +24,6 @@ import com.fasterxml.jackson.databind.ser.std.StringSerializer;
 /** Sensitivity field serializer. */
 public class SensitiveFieldSerializer<Type> extends JsonSerializer<Type> implements ContextualSerializer {
 
-	/**
-	 * Absolute minimum mask size.
-	 */
-	private static final int ABS_MIN_MASK_SIZE = 6;
-
 	/** Mask base. */
 	public static final String MASK_BASE = "-+-+-+-+-+-+-";
 
@@ -37,8 +32,11 @@ public class SensitiveFieldSerializer<Type> extends JsonSerializer<Type> impleme
 	/** Sensitive. */
 	private boolean sensitive;
 
-	/** Minimum mask size. */
-	private final Integer minMaskSize;
+	/** Minimum mask absolute size. */
+	private final Integer minMaskAbsoluteSize;
+
+	/** Minimum mask relative size. */
+	private final BigDecimal minMaskRelativeSize;
 
 	/** Delegate */
 	private JsonSerializer<Type> delegate;
@@ -56,10 +54,12 @@ public class SensitiveFieldSerializer<Type> extends JsonSerializer<Type> impleme
 		super();
 		this.sensitive = sensitive;
 		if (sensitive) {
-			this.minMaskSize = 13;
+			this.minMaskAbsoluteSize = 13;
+			this.minMaskRelativeSize = BigDecimal.ONE;
 		}
 		else {
-			this.minMaskSize = 7;
+			this.minMaskAbsoluteSize = 7;
+			this.minMaskRelativeSize = BigDecimal.valueOf(0.5);
 		}
 		this.delegate = delegate;
 	}
@@ -146,8 +146,9 @@ public class SensitiveFieldSerializer<Type> extends JsonSerializer<Type> impleme
 			else {
 				final String stringValue = Objects.toString(value);
 				final Integer stringValueSize = stringValue.length();
-				final int printSize = (SensitiveFieldSerializer.MASK_BASE.length() - this.minMaskSize);
-				final int actualMaskSize = SensitiveFieldSerializer.MASK_BASE.length() - ((printSize / 2) * 2);
+				final int printSize = (SensitiveFieldSerializer.MASK_BASE.length() - this.minMaskAbsoluteSize);
+				final int actualMaskSize = Math.max(this.minMaskRelativeSize.multiply(new BigDecimal(stringValueSize)).intValue(),
+						SensitiveFieldSerializer.MASK_BASE.length() - ((printSize / 2) * 2));
 				final String printValue = stringValue.substring(0, printSize / 2)
 						+ SensitiveFieldSerializer.MASK_BASE.substring(printSize / 2, (actualMaskSize + (printSize / 2)))
 						+ stringValue.substring(stringValueSize - (printSize / 2));

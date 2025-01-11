@@ -64,7 +64,7 @@ public class DtoTestObjectDto implements Serializable {
 	/**
 	 * test10.
 	 */
-	private java.lang.Integer test10;
+	private java.lang.Long test10;
 
 	/**
 	 * test11.
@@ -338,7 +338,7 @@ public class DtoTestObjectDto implements Serializable {
 	 * @return The test10.
 	 */
 	@com.fasterxml.jackson.annotation.JsonView({org.coldis.library.model.view.ModelView.Personal.class, org.coldis.library.model.view.ModelView.Public.class})
-	public java.lang.Integer getTest10() {
+	public java.lang.Long getTest10() {
 		return test10;
 	}
 	
@@ -348,7 +348,7 @@ public class DtoTestObjectDto implements Serializable {
 	 * @param test10
 	 *            The test10.
 	 */
-	public void setTest10(final java.lang.Integer test10) {
+	public void setTest10(final java.lang.Long test10) {
 		this.test10 = test10;
 	}
 	
@@ -359,7 +359,7 @@ public class DtoTestObjectDto implements Serializable {
 	 *            The test10.
 	 * @return The updated object.
 	 */
-	public DtoTestObjectDto withTest10(final java.lang.Integer test10) {
+	public DtoTestObjectDto withTest10(final java.lang.Long test10) {
 		this.setTest10(test10);
 		return this;
 	}

@@ -90,7 +90,7 @@ public class DtoTestObject implements Identifiable, Typable {
 	/**
 	 * Test attribute.
 	 */
-	private Integer test10;
+	private Long test10;
 
 	/**
 	 * Test attribute.
@@ -301,7 +301,7 @@ public class DtoTestObject implements Identifiable, Typable {
 	 */
 	@JsonView(value = { ModelView.Personal.class, ModelView.Public.class })
 	@DtoAttribute(usedInComparison = false)
-	public Integer getTest10() {
+	public Long getTest10() {
 		return this.test10;
 	}
 
@@ -311,7 +311,7 @@ public class DtoTestObject implements Identifiable, Typable {
 	 * @param test10 New test10.
 	 */
 	public void setTest10(
-			final Integer test10) {
+			final Long test10) {
 		this.test10 = test10;
 	}
 

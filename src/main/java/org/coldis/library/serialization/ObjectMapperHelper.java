@@ -83,8 +83,7 @@ public class ObjectMapperHelper {
 	 *
 	 * @return
 	 */
-	public static SimpleModule getSensitiveFieldModule(
-			final ObjectMapper objectMapper) {
+	public static SimpleModule getSensitiveFieldModule() {
 		final SimpleModule sensitiveFieldModule = new SimpleModule();
 		ObjectMapperHelper.NUMBER_CLASSES.forEach(numberClass -> sensitiveFieldModule.addSerializer(numberClass, new SensitiveFieldSerializer<>()));
 		sensitiveFieldModule.addSerializer(String.class, new SensitiveFieldSerializer<>());
@@ -169,7 +168,7 @@ public class ObjectMapperHelper {
 			final ObjectMapper objectMapper,
 			final String... packagesNames) {
 		objectMapper.registerModule(ObjectMapperHelper.getDateTimeModule());
-		objectMapper.registerModule(ObjectMapperHelper.getSensitiveFieldModule(objectMapper));
+		objectMapper.registerModule(ObjectMapperHelper.getSensitiveFieldModule());
 		ObjectMapperHelper.addSubtypesFromPackage(objectMapper, packagesNames);
 		return objectMapper;
 	}

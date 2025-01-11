@@ -80,7 +80,7 @@ public class SensitiveFieldSerializer<Type> extends JsonSerializer<Type> impleme
 			final BeanProperty property) throws JsonMappingException {
 
 		// Gets the view for the field.
-		final JsonView propertyJsonView = property.getAnnotation(JsonView.class);
+		final JsonView propertyJsonView = (property == null ? null : property.getAnnotation(JsonView.class));
 		final boolean sensitiveField = (propertyJsonView != null)
 				&& Arrays.stream(propertyJsonView.value()).anyMatch(view -> ModelView.Sensitive.class.isAssignableFrom(view));
 		final boolean personalFields = (propertyJsonView != null)
@@ -146,9 +146,9 @@ public class SensitiveFieldSerializer<Type> extends JsonSerializer<Type> impleme
 			else {
 				final String stringValue = Objects.toString(value);
 				final Integer stringValueSize = stringValue.length();
-				final int printSize = (SensitiveFieldSerializer.MASK_BASE.length() - this.minMaskAbsoluteSize);
-				final int actualMaskSize = Math.max(this.minMaskRelativeSize.multiply(new BigDecimal(stringValueSize)).intValue(),
-						SensitiveFieldSerializer.MASK_BASE.length() - ((printSize / 2) * 2));
+				final int printSize = (Math.min(this.minMaskRelativeSize.multiply(new BigDecimal(stringValueSize)).intValue(),
+						SensitiveFieldSerializer.MASK_BASE.length() - this.minMaskAbsoluteSize) / 2) * 2;
+				final int actualMaskSize = (SensitiveFieldSerializer.MASK_BASE.length() - printSize);
 				final String printValue = stringValue.substring(0, printSize / 2)
 						+ SensitiveFieldSerializer.MASK_BASE.substring(printSize / 2, (actualMaskSize + (printSize / 2)))
 						+ stringValue.substring(stringValueSize - (printSize / 2));

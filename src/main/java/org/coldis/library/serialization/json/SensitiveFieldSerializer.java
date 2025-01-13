@@ -43,7 +43,8 @@ public class SensitiveFieldSerializer<Type> extends JsonSerializer<Type> impleme
 
 	/** Delegate */
 	private JsonSerializer<Type> delegate;
-
+	
+	/** Initializes the number serializers. */
 	static {
 		NUMBER_SERIALIZERS = new HashMap<>();
 		NumberSerializers.addAll(SensitiveFieldSerializer.NUMBER_SERIALIZERS);
@@ -71,13 +72,14 @@ public class SensitiveFieldSerializer<Type> extends JsonSerializer<Type> impleme
 	public SensitiveFieldSerializer(final Class<?> originalClass) {
 		this(originalClass, true, null);
 	}
-	
+
 	/**
 	 * Checks if the class is a number type.
 	 */
-	public static boolean isNumberType(final Class<?> clazz) {
-        return Number.class.isAssignableFrom(clazz) || clazz ==int.class || clazz == long.class || clazz == double.class || clazz == float.class || clazz == short.class || clazz == byte.class;
-    }
+	public static boolean isNumberType(
+			final Class<?> clazz) {
+		return Number.class.isAssignableFrom(clazz) || SensitiveFieldSerializer.NUMBER_SERIALIZERS.containsKey(clazz.getName());
+	}
 
 	/**
 	 * @see com.fasterxml.jackson.databind.ser.ContextualSerializer#createContextual(com.fasterxml.jackson.databind.SerializerProvider,
@@ -100,7 +102,7 @@ public class SensitiveFieldSerializer<Type> extends JsonSerializer<Type> impleme
 		this.delegate = (JsonSerializer<Type>) new StringSerializer();
 		// If it is a number, uses the number serializer.
 		final Class<?> actualSerializedClass = ((property != null) ? property.getType().getRawClass() : this.originalClass);
-		if (isNumberType(actualSerializedClass)) {
+		if (SensitiveFieldSerializer.isNumberType(actualSerializedClass)) {
 			final JsonSerializer<?> numberSerializer = SensitiveFieldSerializer.NUMBER_SERIALIZERS.get(actualSerializedClass.getName());
 			if (numberSerializer != null) {
 				this.delegate = (JsonSerializer<Type>) numberSerializer;

@@ -60,9 +60,9 @@ public class SensitiveFieldDeserializer<Type> extends JsonDeserializer<Type> imp
 		JsonDeserializer<?> deserializer = StringDeserializer.instance;
 
 		// If it is a number, uses the number deserializer.
-		if (((property != null) && property.getType().isTypeOrSubTypeOf(Number.class))
-				|| ((property == null) && (this.originalClass != null) && Number.class.isAssignableFrom(this.originalClass))) {
-			final JsonDeserializer<?> numberSerializer = NumberDeserializers.find(property.getType().getRawClass(), property.getType().getRawClass().getName());
+		final Class<?> actualSerializedClass = ((property != null) ? property.getType().getRawClass() : this.originalClass);
+		if (Number.class.isAssignableFrom(actualSerializedClass)) {
+			final JsonDeserializer<?> numberSerializer = NumberDeserializers.find(actualSerializedClass, actualSerializedClass.getName());
 			if (numberSerializer != null) {
 				deserializer = numberSerializer;
 			}
@@ -82,7 +82,7 @@ public class SensitiveFieldDeserializer<Type> extends JsonDeserializer<Type> imp
 		return deserializer;
 
 	}
-	
+
 	/**
 	 * @see com.fasterxml.jackson.databind.JsonDeserializer#deserialize(com.fasterxml.jackson.core.JsonParser,
 	 *      com.fasterxml.jackson.databind.DeserializationContext)

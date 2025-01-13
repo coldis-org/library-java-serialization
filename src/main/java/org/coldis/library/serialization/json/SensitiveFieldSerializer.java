@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.ser.ContextualSerializer;
 import com.fasterxml.jackson.databind.ser.std.NumberSerializer;
 import com.fasterxml.jackson.databind.ser.std.NumberSerializers;
 import com.fasterxml.jackson.databind.ser.std.StringSerializer;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 
 /** Sensitivity field serializer. */
 public class SensitiveFieldSerializer<Type> extends JsonSerializer<Type> implements ContextualSerializer {
@@ -43,7 +44,7 @@ public class SensitiveFieldSerializer<Type> extends JsonSerializer<Type> impleme
 
 	/** Delegate */
 	private JsonSerializer<Type> delegate;
-	
+
 	/** Initializes the number serializers. */
 	static {
 		NUMBER_SERIALIZERS = new HashMap<>();
@@ -99,10 +100,15 @@ public class SensitiveFieldSerializer<Type> extends JsonSerializer<Type> impleme
 				&& Arrays.stream(propertyJsonView.value()).anyMatch(view -> ModelView.Personal.class.isAssignableFrom(view));
 
 		// Default serializer is the String serializer.
-		this.delegate = (JsonSerializer<Type>) new StringSerializer();
-		// If it is a number, uses the number serializer.
+		this.delegate = (JsonSerializer<Type>) new ToStringSerializer();
 		final Class<?> actualSerializedClass = ((property != null) ? property.getType().getRawClass() : this.originalClass);
-		if (SensitiveFieldSerializer.isNumberType(actualSerializedClass)) {
+
+		// If it is a string, uses the string serializer.
+		if (String.class.isAssignableFrom(actualSerializedClass)) {
+			this.delegate = (JsonSerializer<Type>) new StringSerializer();
+		}
+		// If it is a number, uses the number serializer.
+		else if (SensitiveFieldSerializer.isNumberType(actualSerializedClass)) {
 			final JsonSerializer<?> numberSerializer = SensitiveFieldSerializer.NUMBER_SERIALIZERS.get(actualSerializedClass.getName());
 			if (numberSerializer != null) {
 				this.delegate = (JsonSerializer<Type>) numberSerializer;

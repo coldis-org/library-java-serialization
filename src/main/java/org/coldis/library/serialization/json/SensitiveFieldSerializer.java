@@ -77,9 +77,17 @@ public class SensitiveFieldSerializer<Type> extends JsonSerializer<Type> impleme
 	/**
 	 * Checks if the class is a number type.
 	 */
-	public static boolean isNumberType(
+	private static boolean isNumberType(
 			final Class<?> clazz) {
 		return Number.class.isAssignableFrom(clazz) || SensitiveFieldSerializer.NUMBER_SERIALIZERS.containsKey(clazz.getName());
+	}
+
+	/**
+	 * Checks if the class is a number type.
+	 */
+	public static boolean isNumberType(
+			final Class<?> propertyClass, Class<?> originalClass) {
+		return isNumberType(propertyClass)|| isNumberType(originalClass);
 	}
 
 	/**
@@ -108,7 +116,7 @@ public class SensitiveFieldSerializer<Type> extends JsonSerializer<Type> impleme
 			this.delegate = (JsonSerializer<Type>) new StringSerializer();
 		}
 		// If it is a number, uses the number serializer.
-		else if (SensitiveFieldSerializer.isNumberType(actualSerializedClass)) {
+		else if (SensitiveFieldSerializer.isNumberType(actualSerializedClass, originalClass)) {
 			final JsonSerializer<?> numberSerializer = SensitiveFieldSerializer.NUMBER_SERIALIZERS.get(actualSerializedClass.getName());
 			if (numberSerializer != null) {
 				this.delegate = (JsonSerializer<Type>) numberSerializer;

@@ -49,7 +49,6 @@ public class SensitiveFieldSerializer<Type> extends JsonSerializer<Type> impleme
 		NumberSerializers.addAll(SensitiveFieldSerializer.NUMBER_SERIALIZERS);
 		SensitiveFieldSerializer.NUMBER_SERIALIZERS.put(BigInteger.class.getName(), new NumberSerializer(BigInteger.class));
 		SensitiveFieldSerializer.NUMBER_SERIALIZERS.put(BigDecimal.class.getName(), new NumberSerializer(BigDecimal.class));
-
 	}
 
 	/** Constructor. */

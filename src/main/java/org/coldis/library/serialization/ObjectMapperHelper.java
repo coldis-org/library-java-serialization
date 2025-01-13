@@ -75,8 +75,8 @@ public class ObjectMapperHelper {
 	/**
 	 * Number serialization classes.
 	 */
-	private static final Set<Class<? extends Number>> NUMBER_CLASSES = Set.of(Number.class, Integer.class, Long.class, Byte.class, Short.class, Double.class,
-			Float.class, BigDecimal.class, BigInteger.class);
+	private static final Set<Class<? extends Number>> NUMBER_CLASSES = Set.of(Number.class, int.class, Integer.class, long.class, Long.class, byte.class,
+			Byte.class, short.class, Short.class, double.class, Double.class, float.class, Float.class, BigDecimal.class, BigInteger.class);
 
 	/**
 	 * Gets the sensitive fields serialization module.
@@ -87,7 +87,8 @@ public class ObjectMapperHelper {
 		final SimpleModule sensitiveFieldModule = new SimpleModule();
 		ObjectMapperHelper.NUMBER_CLASSES.forEach(numberClass -> sensitiveFieldModule.addSerializer(numberClass, new SensitiveFieldSerializer<>(numberClass)));
 		sensitiveFieldModule.addSerializer(String.class, new SensitiveFieldSerializer<>(String.class));
-		ObjectMapperHelper.NUMBER_CLASSES.forEach(numberClass -> sensitiveFieldModule.addDeserializer(numberClass, new SensitiveFieldDeserializer<>(numberClass)));
+		ObjectMapperHelper.NUMBER_CLASSES
+				.forEach(numberClass -> sensitiveFieldModule.addDeserializer(numberClass, new SensitiveFieldDeserializer<>(numberClass)));
 		sensitiveFieldModule.addDeserializer(String.class, new SensitiveFieldDeserializer<>(String.class));
 		return sensitiveFieldModule;
 	}

@@ -26,13 +26,14 @@ public class SensitiveFieldDeserializer<Type> extends JsonDeserializer<Type> imp
 	private Class<?> originalClass;
 
 	/** Delegate deserializer. */
-	JsonDeserializer<?> delegate;
+	JsonDeserializer<Type> delegate;
 
 	/** Constructor. */
+	@SuppressWarnings("unchecked")
 	public SensitiveFieldDeserializer(final Class<?> originalClass, final JsonDeserializer<Type> delegate) {
 		super();
 		this.originalClass = originalClass;
-		this.delegate = (delegate == null ? new StringDeserializer() : delegate);
+		this.delegate = (delegate == null ? (JsonDeserializer<Type>) new StringDeserializer() : delegate);
 	}
 
 	/** Constructor. */
@@ -45,6 +46,7 @@ public class SensitiveFieldDeserializer<Type> extends JsonDeserializer<Type> imp
 	 *      com.fasterxml.jackson.databind.BeanProperty)
 	 */
 	@Override
+	@SuppressWarnings("unchecked")
 	public JsonDeserializer<?> createContextual(
 			final DeserializationContext deserializationContext,
 			final BeanProperty property) throws JsonMappingException {
@@ -57,25 +59,33 @@ public class SensitiveFieldDeserializer<Type> extends JsonDeserializer<Type> imp
 				&& Arrays.stream(propertyJsonView.value()).anyMatch(view -> ModelView.Personal.class.isAssignableFrom(view));
 
 		// Default deserializer is the String deserializer.
-		JsonDeserializer<?> deserializer = StringDeserializer.instance;
+		this.delegate = (JsonDeserializer<Type>) StringDeserializer.instance;
 
 		// If it is a number, uses the number deserializer.
 		final Class<?> actualSerializedClass = ((property != null) ? property.getType().getRawClass() : this.originalClass);
-		if (SensitiveFieldSerializer.isNumberType(actualSerializedClass)) {
+		if (SensitiveFieldSerializer.isNumberType(actualSerializedClass) || SensitiveFieldSerializer.isNumberType(this.originalClass)) {
 			final JsonDeserializer<?> numberSerializer = NumberDeserializers.find(actualSerializedClass, actualSerializedClass.getName());
+			if (numberSerializer == null) {
+				this.delegate = (JsonDeserializer<Type>) NumberDeserializers.find(this.originalClass, this.originalClass.getName());
+			}
 			if (numberSerializer != null) {
-				deserializer = numberSerializer;
+				this.delegate = (JsonDeserializer<Type>) numberSerializer;
 			}
 		}
 
 		// If it is a contextual deserializer, creates the contextual deserializer.
-		if ((!(deserializer instanceof SensitiveFieldDeserializer)) && deserializer instanceof final ContextualDeserializer contextualNumberSerializer) {
-			deserializer = contextualNumberSerializer.createContextual(deserializationContext, property);
+		if (this.delegate instanceof final ContextualDeserializer contextualDeserializer) {
+			this.delegate = (JsonDeserializer<Type>) contextualDeserializer.createContextual(deserializationContext, property);
 		}
 
 		// If it is a sensitive field, uses the sensitive field deserializer.
+		JsonDeserializer<Type> deserializer;
 		if (sensitiveField || personalFields) {
-			deserializer = new SensitiveFieldDeserializer<>(this.originalClass, deserializer);
+			deserializer = new SensitiveFieldDeserializer<>(this.originalClass, this.delegate);
+		}
+		// If not a sensitive field, uses the delegate.
+		else {
+			deserializer = this.delegate;
 		}
 
 		// Returns the deserializer.
@@ -88,7 +98,6 @@ public class SensitiveFieldDeserializer<Type> extends JsonDeserializer<Type> imp
 	 *      com.fasterxml.jackson.databind.DeserializationContext)
 	 */
 	@Override
-	@SuppressWarnings("unchecked")
 	public Type deserialize(
 			final JsonParser jsonParser,
 			final DeserializationContext deserializationContext) throws IOException, JacksonException {
@@ -97,7 +106,7 @@ public class SensitiveFieldDeserializer<Type> extends JsonDeserializer<Type> imp
 		final String maskedValue = (textValue == null ? null : textValue.substring(3, SensitiveFieldSerializer.MASK_BASE.length() - 3));
 		if ((textValue == null) || (textValue.length() != SensitiveFieldSerializer.MASK_BASE.length())
 				|| !maskedValue.equals(SensitiveFieldDeserializer.MASKED_VALUE)) {
-			value = (Type) this.delegate.deserialize(jsonParser, deserializationContext);
+			value = this.delegate.deserialize(jsonParser, deserializationContext);
 		}
 		return value;
 	}

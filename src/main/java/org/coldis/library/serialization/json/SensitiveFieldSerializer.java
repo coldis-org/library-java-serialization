@@ -100,7 +100,7 @@ public class SensitiveFieldSerializer<Type> extends JsonSerializer<Type> impleme
 				&& Arrays.stream(propertyJsonView.value()).anyMatch(view -> ModelView.Personal.class.isAssignableFrom(view));
 
 		// Default serializer is the String serializer.
-		this.delegate = (JsonSerializer<Type>) new ToStringSerializer();
+		this.delegate = (JsonSerializer<Type>) ToStringSerializer.instance;
 		final Class<?> actualSerializedClass = ((property != null) ? property.getType().getRawClass() : this.originalClass);
 
 		// If it is a string, uses the string serializer.
@@ -119,9 +119,9 @@ public class SensitiveFieldSerializer<Type> extends JsonSerializer<Type> impleme
 			this.delegate = (JsonSerializer<Type>) contextualSerializer.createContextual(serializerProvider, property);
 		}
 
-		JsonSerializer<Type> serializer;
 		// If it is not a sensitive view and it is a sensitive field, uses the sensitive
 		// field serializer.
+		JsonSerializer<Type> serializer;
 		if (sensitiveField) {
 			serializer = new SensitiveFieldSerializer<>(this.originalClass, true, this.delegate);
 		}

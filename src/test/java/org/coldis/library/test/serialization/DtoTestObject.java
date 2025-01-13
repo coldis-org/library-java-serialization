@@ -1,6 +1,8 @@
 package org.coldis.library.test.serialization;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import org.coldis.library.dto.DtoAttribute;
 import org.coldis.library.dto.DtoType;
@@ -96,6 +98,11 @@ public class DtoTestObject implements Identifiable, Typable {
 	 * Test attribute.
 	 */
 	private String test11;
+
+	/**
+	 * Test attribute.
+	 */
+	private TestEnum test12;
 
 	/**
 	 * @see org.coldis.library.model.Identifiable#getId()
@@ -334,6 +341,59 @@ public class DtoTestObject implements Identifiable, Typable {
 	public void setTest11(
 			final String test11) {
 		this.test11 = test11;
+	}
+
+	/**
+	 * Gets the test12.
+	 *
+	 * @return The test12.
+	 */
+	public TestEnum getTest12() {
+		return this.test12;
+	}
+
+	/**
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = (prime * result) + Arrays.hashCode(this.test6);
+		result = (prime * result) + Arrays.hashCode(this.test8);
+		result = (prime * result) + Objects.hash(this.id, this.test1, this.test10, this.test11, this.test12, this.test2, this.test3, this.test4, this.test5,
+				this.test7, this.test9);
+		return result;
+	}
+
+	/**
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(
+			final Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if ((obj == null) || (this.getClass() != obj.getClass())) {
+			return false;
+		}
+		final DtoTestObject other = (DtoTestObject) obj;
+		return Objects.equals(this.id, other.id) && Objects.equals(this.test1, other.test1) && Objects.equals(this.test10, other.test10)
+				&& Objects.equals(this.test11, other.test11) && (this.test12 == other.test12) && Objects.equals(this.test2, other.test2)
+				&& Objects.equals(this.test3, other.test3) && Objects.equals(this.test4, other.test4) && Objects.equals(this.test5, other.test5)
+				&& Arrays.equals(this.test6, other.test6) && (this.test7 == other.test7) && Arrays.equals(this.test8, other.test8)
+				&& Objects.equals(this.test9, other.test9);
+	}
+
+	/**
+	 * Sets the test12.
+	 *
+	 * @param test12 New test12.
+	 */
+	public void setTest12(
+			final TestEnum test12) {
+		this.test12 = test12;
 	}
 
 	/**

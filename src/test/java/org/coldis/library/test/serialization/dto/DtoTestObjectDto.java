@@ -72,6 +72,11 @@ public class DtoTestObjectDto implements Serializable {
 	private java.lang.String test11;
 
 	/**
+	 * test12.
+	 */
+	private org.coldis.library.test.serialization.TestEnum test12;
+
+	/**
 	 * typeName.
 	 */
 	private final java.lang.String typeName = "org.coldis.library.test.serialization.DtoTestObject";
@@ -394,6 +399,36 @@ public class DtoTestObjectDto implements Serializable {
 		return this;
 	}
 	/**
+	 * Gets the test12.
+	 * @return The test12.
+	 */
+	
+	public org.coldis.library.test.serialization.TestEnum getTest12() {
+		return test12;
+	}
+	
+	/**
+	 * Sets the test12.
+	 *
+	 * @param test12
+	 *            The test12.
+	 */
+	public void setTest12(final org.coldis.library.test.serialization.TestEnum test12) {
+		this.test12 = test12;
+	}
+	
+	/**
+	 * Sets the test12 and returns the updated object.
+	 *
+	 * @param test12
+	 *            The test12.
+	 * @return The updated object.
+	 */
+	public DtoTestObjectDto withTest12(final org.coldis.library.test.serialization.TestEnum test12) {
+		this.setTest12(test12);
+		return this;
+	}
+	/**
 	 * Gets the typeName.
 	 * @return The typeName.
 	 */
@@ -432,6 +467,9 @@ test7
 
 
 
+
+,
+test12
 
 ,
 typeName
@@ -481,6 +519,9 @@ typeName
 			return false;
 		}
 		if (! Arrays.equals(test88, other.test88)) {
+			return false;
+		}
+		if (! Objects.equals(test12, other.test12)) {
 			return false;
 		}
 		if (! Objects.equals(typeName, other.typeName)) {

@@ -25,7 +25,8 @@ public class ObjectMapperHelperTest {
 			.withTest2(List.of(new DtoTestObject2Dto().withId(2L).withTest("test2"), new DtoTestObject2Dto().withId(3L).withTest("test3")))
 			.withTest4(new DtoTestObject2Dto().withId(4L).withTest("test4"))
 			.withTest6(new DtoTestObject2Dto[] { new DtoTestObject2Dto().withId(5L).withTest("test5"), new DtoTestObject2Dto().withId(6L).withTest("test6") })
-			.withTest7(7).withTest88(new int[] { 2, 3, 4 }).withTest9(9).withTest10(1000000000000L).withTest11("Romulo Valente Coutinho") };
+			.withTest7(7).withTest88(new int[] { 2, 3, 4 }).withTest9(9).withTest10(1000000000000L).withTest11("Romulo Valente Coutinho")
+			.withTest12(TestEnum.ABC) };
 
 	/**
 	 * Object mapper.
@@ -55,11 +56,13 @@ public class ObjectMapperHelperTest {
 			final DtoTestObject originalObject4 = ObjectMapperHelper.convert(this.objectMapper, originalDto, new TypeReference<DtoTestObject>() {}, true);
 			final DtoTestObjectDto reconvertedDto4 = ObjectMapperHelper.convert(this.objectMapper, originalObject4, new TypeReference<DtoTestObjectDto>() {},
 					true);
+			
 			// The DTO should remain the same.
 			Assertions.assertEquals(originalDto, reconvertedDto1);
 			Assertions.assertEquals(originalDto, reconvertedDto2);
 			Assertions.assertEquals(originalDto, reconvertedDto3);
 			Assertions.assertEquals(originalDto, reconvertedDto4);
+			
 			// Asserts that errors are ignored if resume on errors is set.
 			Assertions.assertNull(ObjectMapperHelper.convert(null, originalDto, DtoTestObject.class, true));
 			Assertions.assertNull(ObjectMapperHelper.convert(null, originalDto, new TypeReference<DtoTestObject>() {}, true));
@@ -157,11 +160,10 @@ public class ObjectMapperHelperTest {
 		final DtoTestObject originalObject4 = ObjectMapperHelper.deserialize(this.objectMapper, serializedObject4, DtoTestObject.class, false);
 		Assertions.assertEquals(ObjectMapperHelperTest.TEST_DATA[0].getTest10(), originalObject4.getTest10());
 		Assertions.assertEquals(ObjectMapperHelperTest.TEST_DATA[0].getTest11(), originalObject4.getTest11());
-		
+
 		// Tests sensitive field serialization using Public JSON view with small field.
 		originalObject4.setTest10(1234L);
-		final String serializedObject5 = ObjectMapperHelper.serialize(this.objectMapper, originalObject4,
-				ModelView.Public.class, false);
+		final String serializedObject5 = ObjectMapperHelper.serialize(this.objectMapper, originalObject4, ModelView.Public.class, false);
 		final DtoTestObject originalObject5 = ObjectMapperHelper.deserialize(this.objectMapper, serializedObject5, DtoTestObject.class, false);
 		Assertions.assertTrue(serializedObject5.contains("\"test10\":\"1+-+-+-+-+-+4\""));
 		Assertions.assertEquals(null, originalObject5.getTest10());

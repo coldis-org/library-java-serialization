@@ -22,18 +22,22 @@ public class SensitiveFieldDeserializer<Type> extends JsonDeserializer<Type> imp
 	/** Masked value. */
 	private static final String MASKED_VALUE = SensitiveFieldSerializer.MASK_BASE.substring(3, SensitiveFieldSerializer.MASK_BASE.length() - 3);
 
+	/** Original class. */
+	private Class<?> originalClass;
+
 	/** Delegate deserializer. */
 	JsonDeserializer<?> delegate;
 
 	/** Constructor. */
-	public SensitiveFieldDeserializer(final JsonDeserializer<Type> delegate) {
+	public SensitiveFieldDeserializer(final Class<?> originalClass, final JsonDeserializer<Type> delegate) {
 		super();
+		this.originalClass = originalClass;
 		this.delegate = (delegate == null ? new StringDeserializer() : delegate);
 	}
 
 	/** Constructor. */
-	public SensitiveFieldDeserializer() {
-		this(null);
+	public SensitiveFieldDeserializer(final Class<?> originalClass) {
+		this(originalClass, null);
 	}
 
 	/**
@@ -56,7 +60,8 @@ public class SensitiveFieldDeserializer<Type> extends JsonDeserializer<Type> imp
 		JsonDeserializer<?> deserializer = StringDeserializer.instance;
 
 		// If it is a number, uses the number deserializer.
-		if ((property != null) && property.getType().isTypeOrSubTypeOf(Number.class)) {
+		if (((property != null) && property.getType().isTypeOrSubTypeOf(Number.class))
+				|| ((property == null) && (this.originalClass != null) && Number.class.isAssignableFrom(this.originalClass))) {
 			final JsonDeserializer<?> numberSerializer = NumberDeserializers.find(property.getType().getRawClass(), property.getType().getRawClass().getName());
 			if (numberSerializer != null) {
 				deserializer = numberSerializer;
@@ -70,14 +75,14 @@ public class SensitiveFieldDeserializer<Type> extends JsonDeserializer<Type> imp
 
 		// If it is a sensitive field, uses the sensitive field deserializer.
 		if (sensitiveField || personalFields) {
-			deserializer = new SensitiveFieldDeserializer<>(deserializer);
+			deserializer = new SensitiveFieldDeserializer<>(this.originalClass, deserializer);
 		}
 
 		// Returns the deserializer.
 		return deserializer;
 
 	}
-
+	
 	/**
 	 * @see com.fasterxml.jackson.databind.JsonDeserializer#deserialize(com.fasterxml.jackson.core.JsonParser,
 	 *      com.fasterxml.jackson.databind.DeserializationContext)

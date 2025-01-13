@@ -85,10 +85,10 @@ public class ObjectMapperHelper {
 	 */
 	public static SimpleModule getSensitiveFieldModule() {
 		final SimpleModule sensitiveFieldModule = new SimpleModule();
-		ObjectMapperHelper.NUMBER_CLASSES.forEach(numberClass -> sensitiveFieldModule.addSerializer(numberClass, new SensitiveFieldSerializer<>()));
-		sensitiveFieldModule.addSerializer(String.class, new SensitiveFieldSerializer<>());
-		ObjectMapperHelper.NUMBER_CLASSES.forEach(numberClass -> sensitiveFieldModule.addDeserializer(numberClass, new SensitiveFieldDeserializer<>()));
-		sensitiveFieldModule.addDeserializer(String.class, new SensitiveFieldDeserializer<>());
+		ObjectMapperHelper.NUMBER_CLASSES.forEach(numberClass -> sensitiveFieldModule.addSerializer(numberClass, new SensitiveFieldSerializer<>(numberClass)));
+		sensitiveFieldModule.addSerializer(String.class, new SensitiveFieldSerializer<>(String.class));
+		ObjectMapperHelper.NUMBER_CLASSES.forEach(numberClass -> sensitiveFieldModule.addDeserializer(numberClass, new SensitiveFieldDeserializer<>(numberClass)));
+		sensitiveFieldModule.addDeserializer(String.class, new SensitiveFieldDeserializer<>(String.class));
 		return sensitiveFieldModule;
 	}
 

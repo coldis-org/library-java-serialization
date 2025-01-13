@@ -29,6 +29,9 @@ public class SensitiveFieldSerializer<Type> extends JsonSerializer<Type> impleme
 
 	private static final Map<String, JsonSerializer<?>> NUMBER_SERIALIZERS;
 
+	/** Original class. */
+	private Class<?> originalClass;
+
 	/** Sensitive. */
 	private boolean sensitive;
 
@@ -50,8 +53,9 @@ public class SensitiveFieldSerializer<Type> extends JsonSerializer<Type> impleme
 	}
 
 	/** Constructor. */
-	public SensitiveFieldSerializer(final boolean sensitive, final JsonSerializer<Type> delegate) {
+	public SensitiveFieldSerializer(final Class<?> originalClass, final boolean sensitive, final JsonSerializer<Type> delegate) {
 		super();
+		this.originalClass = originalClass;
 		this.sensitive = sensitive;
 		if (sensitive) {
 			this.minMaskAbsoluteSize = 13;
@@ -65,8 +69,8 @@ public class SensitiveFieldSerializer<Type> extends JsonSerializer<Type> impleme
 	}
 
 	/** No arguments constructor. */
-	public SensitiveFieldSerializer() {
-		this(true, null);
+	public SensitiveFieldSerializer(final Class<?> originalClass) {
+		this(originalClass, true, null);
 	}
 
 	/**
@@ -89,8 +93,8 @@ public class SensitiveFieldSerializer<Type> extends JsonSerializer<Type> impleme
 		// Default serializer is the String serializer.
 		this.delegate = (JsonSerializer<Type>) new StringSerializer();
 		// If it is a number, uses the number serializer.
-		if ((property != null) && property.getType().isTypeOrSubTypeOf(Number.class)) {
-			final JsonSerializer<?> numberSerializer = SensitiveFieldSerializer.NUMBER_SERIALIZERS.get(property.getType().getRawClass().getName());
+		if (((property != null) && property.getType().isTypeOrSubTypeOf(Number.class))) {
+			final JsonSerializer<?> numberSerializer = SensitiveFieldSerializer.NUMBER_SERIALIZERS.get(property.getType().getRawClass().getName())  ;
 			if (numberSerializer != null) {
 				this.delegate = (JsonSerializer<Type>) numberSerializer;
 			}
@@ -104,12 +108,12 @@ public class SensitiveFieldSerializer<Type> extends JsonSerializer<Type> impleme
 		// If it is not a sensitive view and it is a sensitive field, uses the sensitive
 		// field serializer.
 		if (sensitiveField) {
-			serializer = new SensitiveFieldSerializer<>(true, this.delegate);
+			serializer = new SensitiveFieldSerializer<>(this.originalClass, true, this.delegate);
 		}
 		// If it is not a personal view and it is a personal field, uses the sensitive
 		// field serializer.
 		else if (personalFields) {
-			serializer = new SensitiveFieldSerializer<>(false, this.delegate);
+			serializer = new SensitiveFieldSerializer<>(this.originalClass,false, this.delegate);
 		}
 		// If not a sensitive field, uses the delegate.
 		else {

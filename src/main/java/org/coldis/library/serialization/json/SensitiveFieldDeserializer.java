@@ -61,7 +61,7 @@ public class SensitiveFieldDeserializer<Type> extends JsonDeserializer<Type> imp
 
 		// If it is a number, uses the number deserializer.
 		final Class<?> actualSerializedClass = ((property != null) ? property.getType().getRawClass() : this.originalClass);
-		if (Number.class.isAssignableFrom(actualSerializedClass)) {
+		if (SensitiveFieldSerializer.isNumberType(actualSerializedClass)) {
 			final JsonDeserializer<?> numberSerializer = NumberDeserializers.find(actualSerializedClass, actualSerializedClass.getName());
 			if (numberSerializer != null) {
 				deserializer = numberSerializer;

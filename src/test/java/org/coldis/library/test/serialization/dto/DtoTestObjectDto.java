@@ -77,6 +77,11 @@ public class DtoTestObjectDto implements Serializable {
 	private org.coldis.library.test.serialization.TestEnum test12;
 
 	/**
+	 * test13.
+	 */
+	private java.util.Map<java.lang.String,java.lang.Object> test13;
+
+	/**
 	 * typeName.
 	 */
 	private final java.lang.String typeName = "org.coldis.library.test.serialization.DtoTestObject";
@@ -429,6 +434,36 @@ public class DtoTestObjectDto implements Serializable {
 		return this;
 	}
 	/**
+	 * Gets the test13.
+	 * @return The test13.
+	 */
+	
+	public java.util.Map<java.lang.String,java.lang.Object> getTest13() {
+		return test13;
+	}
+	
+	/**
+	 * Sets the test13.
+	 *
+	 * @param test13
+	 *            The test13.
+	 */
+	public void setTest13(final java.util.Map<java.lang.String,java.lang.Object> test13) {
+		this.test13 = test13;
+	}
+	
+	/**
+	 * Sets the test13 and returns the updated object.
+	 *
+	 * @param test13
+	 *            The test13.
+	 * @return The updated object.
+	 */
+	public DtoTestObjectDto withTest13(final java.util.Map<java.lang.String,java.lang.Object> test13) {
+		this.setTest13(test13);
+		return this;
+	}
+	/**
 	 * Gets the typeName.
 	 * @return The typeName.
 	 */
@@ -470,6 +505,9 @@ test7
 
 ,
 test12
+
+,
+test13
 
 ,
 typeName
@@ -522,6 +560,9 @@ typeName
 			return false;
 		}
 		if (! Objects.equals(test12, other.test12)) {
+			return false;
+		}
+		if (! Objects.equals(test13, other.test13)) {
 			return false;
 		}
 		if (! Objects.equals(typeName, other.typeName)) {

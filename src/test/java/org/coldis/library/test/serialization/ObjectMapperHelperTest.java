@@ -1,6 +1,7 @@
 package org.coldis.library.test.serialization;
 
 import java.util.List;
+import java.util.Map;
 
 import org.coldis.library.model.view.ModelView;
 import org.coldis.library.serialization.ObjectMapperHelper;
@@ -26,7 +27,7 @@ public class ObjectMapperHelperTest {
 			.withTest4(new DtoTestObject2Dto().withId(4L).withTest("test4"))
 			.withTest6(new DtoTestObject2Dto[] { new DtoTestObject2Dto().withId(5L).withTest("test5"), new DtoTestObject2Dto().withId(6L).withTest("test6") })
 			.withTest7(7).withTest88(new int[] { 2, 3, 4 }).withTest9(9).withTest10(1000000000000L).withTest11("Romulo Valente Coutinho")
-			.withTest12(TestEnum.ABC) };
+			.withTest12(TestEnum.ABC).withTest13(Map.of("test1", 1, "test2", "2")) };
 
 	/**
 	 * Object mapper.
@@ -56,13 +57,13 @@ public class ObjectMapperHelperTest {
 			final DtoTestObject originalObject4 = ObjectMapperHelper.convert(this.objectMapper, originalDto, new TypeReference<DtoTestObject>() {}, true);
 			final DtoTestObjectDto reconvertedDto4 = ObjectMapperHelper.convert(this.objectMapper, originalObject4, new TypeReference<DtoTestObjectDto>() {},
 					true);
-			
+
 			// The DTO should remain the same.
 			Assertions.assertEquals(originalDto, reconvertedDto1);
 			Assertions.assertEquals(originalDto, reconvertedDto2);
 			Assertions.assertEquals(originalDto, reconvertedDto3);
 			Assertions.assertEquals(originalDto, reconvertedDto4);
-			
+
 			// Asserts that errors are ignored if resume on errors is set.
 			Assertions.assertNull(ObjectMapperHelper.convert(null, originalDto, DtoTestObject.class, true));
 			Assertions.assertNull(ObjectMapperHelper.convert(null, originalDto, new TypeReference<DtoTestObject>() {}, true));

@@ -2,6 +2,7 @@ package org.coldis.library.test.serialization;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import org.coldis.library.dto.DtoAttribute;
@@ -103,6 +104,11 @@ public class DtoTestObject implements Identifiable, Typable {
 	 * Test attribute.
 	 */
 	private TestEnum test12;
+	
+	/**
+	 * Test attribute.
+	 */
+	private Map<String, Object> test13;
 
 	/**
 	 * @see org.coldis.library.model.Identifiable#getId()
@@ -352,39 +358,6 @@ public class DtoTestObject implements Identifiable, Typable {
 		return this.test12;
 	}
 
-	/**
-	 * @see java.lang.Object#hashCode()
-	 */
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = (prime * result) + Arrays.hashCode(this.test6);
-		result = (prime * result) + Arrays.hashCode(this.test8);
-		result = (prime * result) + Objects.hash(this.id, this.test1, this.test10, this.test11, this.test12, this.test2, this.test3, this.test4, this.test5,
-				this.test7, this.test9);
-		return result;
-	}
-
-	/**
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
-	@Override
-	public boolean equals(
-			final Object obj) {
-		if (this == obj) {
-			return true;
-		}
-		if ((obj == null) || (this.getClass() != obj.getClass())) {
-			return false;
-		}
-		final DtoTestObject other = (DtoTestObject) obj;
-		return Objects.equals(this.id, other.id) && Objects.equals(this.test1, other.test1) && Objects.equals(this.test10, other.test10)
-				&& Objects.equals(this.test11, other.test11) && (this.test12 == other.test12) && Objects.equals(this.test2, other.test2)
-				&& Objects.equals(this.test3, other.test3) && Objects.equals(this.test4, other.test4) && Objects.equals(this.test5, other.test5)
-				&& Arrays.equals(this.test6, other.test6) && (this.test7 == other.test7) && Arrays.equals(this.test8, other.test8)
-				&& Objects.equals(this.test9, other.test9);
-	}
 
 	/**
 	 * Sets the test12.
@@ -394,6 +367,23 @@ public class DtoTestObject implements Identifiable, Typable {
 	public void setTest12(
 			final TestEnum test12) {
 		this.test12 = test12;
+	}
+	
+	/**
+	 * Gets the test13.
+	 * @return The test13.
+	 */
+	public Map<String, Object> getTest13() {
+		return test13;
+	}
+
+	/**
+	 * Sets the test13.
+	 * @param test13 New test13.
+	 */
+	public void setTest13(
+			Map<String, Object> test13) {
+		this.test13 = test13;
 	}
 
 	/**
@@ -408,5 +398,38 @@ public class DtoTestObject implements Identifiable, Typable {
 	public String getTypeName() {
 		return DtoTestObject.TYPE_NAME;
 	}
+	
+	/**
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + Arrays.hashCode(test6);
+		result = prime * result + Arrays.hashCode(test8);
+		result = prime * result + Objects.hash(id, test1, test10, test11, test12, test13, test2, test3, test4, test5, test7, test9);
+		return result;
+	}
+
+	/**
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(
+			Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		DtoTestObject other = (DtoTestObject) obj;
+		return Objects.equals(id, other.id) && Objects.equals(test1, other.test1) && Objects.equals(test10, other.test10)
+				&& Objects.equals(test11, other.test11) && test12 == other.test12 && Objects.equals(test13, other.test13) && Objects.equals(test2, other.test2)
+				&& Objects.equals(test3, other.test3) && Objects.equals(test4, other.test4) && Objects.equals(test5, other.test5)
+				&& Arrays.equals(test6, other.test6) && test7 == other.test7 && Arrays.equals(test8, other.test8) && Objects.equals(test9, other.test9);
+	}
+
 
 }

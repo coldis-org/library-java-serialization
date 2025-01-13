@@ -75,19 +75,34 @@ public class SensitiveFieldSerializer<Type> extends JsonSerializer<Type> impleme
 	}
 
 	/**
+	 * Gets the actual class for the property.
+	 *
+	 * @param  property      The property.
+	 * @param  originalClass The original class.
+	 * @return               The actual class for the property.
+	 */
+	public static Class<?> getActualClass(
+			final BeanProperty property,
+			final Class<?> originalClass) {
+		return ((property != null) ? property.getType().getRawClass() : originalClass);
+	}
+
+	/**
 	 * Checks if the class is a number type.
 	 */
 	private static boolean isNumberType(
 			final Class<?> clazz) {
-		return Number.class.isAssignableFrom(clazz) || SensitiveFieldSerializer.NUMBER_SERIALIZERS.containsKey(clazz.getName());
+		return (clazz != null) && (Number.class.isAssignableFrom(clazz) || SensitiveFieldSerializer.NUMBER_SERIALIZERS.containsKey(clazz.getName()));
 	}
 
 	/**
 	 * Checks if the class is a number type.
 	 */
 	public static boolean isNumberType(
-			final Class<?> propertyClass, Class<?> originalClass) {
-		return isNumberType(propertyClass)|| isNumberType(originalClass);
+			final BeanProperty property,
+			final Class<?> originalClass) {
+		final Class<?> propertyClass = (property == null ? null : property.getType().getRawClass());
+		return SensitiveFieldSerializer.isNumberType(propertyClass) || SensitiveFieldSerializer.isNumberType(originalClass);
 	}
 
 	/**
@@ -109,15 +124,18 @@ public class SensitiveFieldSerializer<Type> extends JsonSerializer<Type> impleme
 
 		// Default serializer is the String serializer.
 		this.delegate = (JsonSerializer<Type>) ToStringSerializer.instance;
-		final Class<?> actualSerializedClass = ((property != null) ? property.getType().getRawClass() : this.originalClass);
+		final Class<?> actualSerializedClass = SensitiveFieldSerializer.getActualClass(property, this.originalClass);
 
 		// If it is a string, uses the string serializer.
 		if (String.class.isAssignableFrom(actualSerializedClass)) {
 			this.delegate = (JsonSerializer<Type>) new StringSerializer();
 		}
 		// If it is a number, uses the number serializer.
-		else if (SensitiveFieldSerializer.isNumberType(actualSerializedClass, originalClass)) {
+		else if (SensitiveFieldSerializer.isNumberType(property, this.originalClass)) {
 			final JsonSerializer<?> numberSerializer = SensitiveFieldSerializer.NUMBER_SERIALIZERS.get(actualSerializedClass.getName());
+			if (numberSerializer == null) {
+				this.delegate = (JsonSerializer<Type>) SensitiveFieldSerializer.NUMBER_SERIALIZERS.get(this.originalClass.getName());
+			}
 			if (numberSerializer != null) {
 				this.delegate = (JsonSerializer<Type>) numberSerializer;
 			}

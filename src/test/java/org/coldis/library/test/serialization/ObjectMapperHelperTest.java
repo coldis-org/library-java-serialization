@@ -172,6 +172,18 @@ public class ObjectMapperHelperTest {
 		Assertions.assertTrue(serializedObject5.contains("\"test10\":\"1+-+-+-+-+-+4\""));
 		Assertions.assertTrue(serializedObject5.contains("\"test11\":\"-+-+-+-+-+-+-\""));
 		Assertions.assertEquals(null, originalObject5.getTest10());
+
+		// Tests sensitive field serialization using PublicAndSensite JSON view with
+		// small field.
+		originalObject4.setTest10(1234L);
+		originalObject4.setTest11("Rom");
+		final String serializedObject6 = ObjectMapperHelper.serialize(this.objectMapper, originalObject4, ModelView.PublicAndSensitive.class, false);
+		final DtoTestObject originalObject6 = ObjectMapperHelper.deserialize(this.objectMapper, serializedObject6, DtoTestObject.class, false);
+		Assertions.assertFalse(serializedObject6.contains("\"test10\":\"1+-+-+-+-+-+4\""));
+		Assertions.assertFalse(serializedObject6.contains("\"test11\":\"-+-+-+-+-+-+-\""));
+		Assertions.assertEquals(originalObject4.getTest10(), originalObject6.getTest10());
+		Assertions.assertEquals(originalObject4.getTest11(), originalObject6.getTest11());
+
 	}
 
 }

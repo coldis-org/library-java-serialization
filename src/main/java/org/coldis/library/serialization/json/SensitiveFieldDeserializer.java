@@ -2,6 +2,7 @@ package org.coldis.library.serialization.json;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Objects;
 
 import org.coldis.library.model.view.ModelView;
 
@@ -60,8 +61,8 @@ public class SensitiveFieldDeserializer<Type> extends JsonDeserializer<Type> imp
 
 		// Default deserializer is the String deserializer.
 		this.delegate = (JsonDeserializer<Type>) StringDeserializer.instance;
-		final Class<?> actualSerializedClass = SensitiveFieldSerializer.getActualClass(property, originalClass);
-		
+		final Class<?> actualSerializedClass = SensitiveFieldSerializer.getActualClass(property, this.originalClass);
+
 		// If it is a number, uses the number deserializer.
 		if (SensitiveFieldSerializer.isNumberType(property, this.originalClass)) {
 			final JsonDeserializer<?> numberDeserializer = NumberDeserializers.find(actualSerializedClass, actualSerializedClass.getName());
@@ -103,9 +104,9 @@ public class SensitiveFieldDeserializer<Type> extends JsonDeserializer<Type> imp
 			final DeserializationContext deserializationContext) throws IOException, JacksonException {
 		Type value = null;
 		final String textValue = jsonParser.getText();
-		final String maskedValue = (textValue == null ? null : textValue.substring(3, SensitiveFieldSerializer.MASK_BASE.length() - 3));
-		if ((textValue == null) || (textValue.length() != SensitiveFieldSerializer.MASK_BASE.length())
-				|| !maskedValue.equals(SensitiveFieldDeserializer.MASKED_VALUE)) {
+		final boolean potentiallyMasked = (textValue.length() == SensitiveFieldSerializer.MASK_BASE.length());
+		final String maskedValue = ((textValue == null) || !potentiallyMasked ? null : textValue.substring(3, SensitiveFieldSerializer.MASK_BASE.length() - 3));
+		if ((textValue == null) || !Objects.equals(maskedValue, SensitiveFieldDeserializer.MASKED_VALUE)) {
 			value = this.delegate.deserialize(jsonParser, deserializationContext);
 		}
 		return value;

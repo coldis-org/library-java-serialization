@@ -2,7 +2,6 @@ package org.coldis.library.serialization.json;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Objects;
 
 import org.coldis.library.model.view.ModelView;
 
@@ -104,9 +103,7 @@ public class SensitiveFieldDeserializer<Type> extends JsonDeserializer<Type> imp
 			final DeserializationContext deserializationContext) throws IOException, JacksonException {
 		Type value = null;
 		final String textValue = jsonParser.getText();
-		final boolean potentiallyMasked = (textValue.length() == SensitiveFieldSerializer.MASK_BASE.length());
-		final String maskedValue = ((textValue == null) || !potentiallyMasked ? null : textValue.substring(3, SensitiveFieldSerializer.MASK_BASE.length() - 3));
-		if ((textValue == null) || !Objects.equals(maskedValue, SensitiveFieldDeserializer.MASKED_VALUE)) {
+		if ((textValue == null) || (!textValue.contains(SensitiveFieldDeserializer.MASKED_VALUE))) {
 			value = this.delegate.deserialize(jsonParser, deserializationContext);
 		}
 		return value;

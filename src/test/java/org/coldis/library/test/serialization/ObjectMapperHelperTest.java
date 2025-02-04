@@ -27,7 +27,7 @@ public class ObjectMapperHelperTest {
 			.withTest4(new DtoTestObject2Dto().withId(4L).withTest("test4"))
 			.withTest6(new DtoTestObject2Dto[] { new DtoTestObject2Dto().withId(5L).withTest("test5"), new DtoTestObject2Dto().withId(6L).withTest("test6") })
 			.withTest7(7).withTest88(new int[] { 2, 3, 4 }).withTest9(9).withTest10(1000000000000L).withTest11("Romulo Valente Coutinho")
-			.withTest12(TestEnum.ABC).withTest13(Map.of("test1", 1, "test2", "2")) };
+			.withTest12(TestEnum.ABC).withTest13(Map.of("test1", 1, "test2", "2")).withTest14("romulo@gmail.com") };
 
 	/**
 	 * Object mapper.
@@ -183,6 +183,15 @@ public class ObjectMapperHelperTest {
 		Assertions.assertFalse(serializedObject6.contains("\"test11\":\"-+-+-+-+-+-+-\""));
 		Assertions.assertEquals(originalObject4.getTest10(), originalObject6.getTest10());
 		Assertions.assertEquals(originalObject4.getTest11(), originalObject6.getTest11());
+		
+		// Tests sensitive field serialization using SensitiveAttribute annotation.
+//		final String serializedObject7 = ObjectMapperHelper.serialize(this.objectMapper, ObjectMapperHelperTest.TEST_DATA[0], null, false);
+//		final DtoTestObject originalObject7 = ObjectMapperHelper.deserialize(this.objectMapper, serializedObject5, DtoTestObject.class, false);
+//		Assertions.assertFalse(serializedObject1.contains("\"test14\":\"romulo-+-+-+-+-+-+-\""));
+//		Assertions.assertEquals(ObjectMapperHelperTest.TEST_DATA[0].getTest10(), originalObject1.getTest10());
+//		Assertions.assertEquals(ObjectMapperHelperTest.TEST_DATA[0].getTest11(), originalObject1.getTest11());
+
+		
 
 	}
 

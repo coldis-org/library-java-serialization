@@ -7,7 +7,11 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.MatchResult;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
 import org.coldis.library.model.view.ModelView;
 
 import com.fasterxml.jackson.annotation.JsonView;
@@ -28,6 +32,11 @@ public class SensitiveFieldSerializer<Type> extends JsonSerializer<Type> impleme
 	/** Mask base. */
 	public static final String MASK_BASE = "-+-+-+-+-+-+-";
 
+	/**
+	 * Default to be masked regex.
+	 */
+	public static final String DEFAULT_TO_BE_MASKED_REGEX = ".*";
+
 	private static final Map<String, JsonSerializer<?>> NUMBER_SERIALIZERS;
 
 	/** Original class. */
@@ -35,6 +44,9 @@ public class SensitiveFieldSerializer<Type> extends JsonSerializer<Type> impleme
 
 	/** Sensitive. */
 	private boolean sensitive;
+
+	/** To be masked regex. */
+	private final String toBeMaskedRegex;
 
 	/** Minimum mask absolute size. */
 	private final Integer minMaskAbsoluteSize;
@@ -54,7 +66,7 @@ public class SensitiveFieldSerializer<Type> extends JsonSerializer<Type> impleme
 	}
 
 	/** Constructor. */
-	public SensitiveFieldSerializer(final Class<?> originalClass, final boolean sensitive, final JsonSerializer<Type> delegate) {
+	public SensitiveFieldSerializer(final Class<?> originalClass, final boolean sensitive, final String toBeMaskedRegex, final JsonSerializer<Type> delegate) {
 		super();
 		this.originalClass = originalClass;
 		this.sensitive = sensitive;
@@ -66,12 +78,13 @@ public class SensitiveFieldSerializer<Type> extends JsonSerializer<Type> impleme
 			this.minMaskAbsoluteSize = 7;
 			this.minMaskRelativeSize = BigDecimal.valueOf(0.5);
 		}
+		this.toBeMaskedRegex = (StringUtils.isBlank(toBeMaskedRegex) ? SensitiveFieldSerializer.DEFAULT_TO_BE_MASKED_REGEX : toBeMaskedRegex);
 		this.delegate = delegate;
 	}
 
 	/** No arguments constructor. */
 	public SensitiveFieldSerializer(final Class<?> originalClass) {
-		this(originalClass, true, null);
+		this(originalClass, true, null, null);
 	}
 
 	/**
@@ -122,6 +135,11 @@ public class SensitiveFieldSerializer<Type> extends JsonSerializer<Type> impleme
 		final boolean personalFields = (propertyJsonView != null)
 				&& Arrays.stream(propertyJsonView.value()).anyMatch(view -> ModelView.Personal.class.isAssignableFrom(view));
 
+		// Gets the sensitive attribute annotation.
+		final SensitiveAttribute sensitiveAttribute = (property == null ? null : property.getAnnotation(SensitiveAttribute.class));
+		final String sensitiveAttributeRegex = (sensitiveAttribute == null ? SensitiveFieldSerializer.DEFAULT_TO_BE_MASKED_REGEX
+				: sensitiveAttribute.toBeMaskedRegex());
+
 		// Default serializer is the String serializer.
 		this.delegate = (JsonSerializer<Type>) ToStringSerializer.instance;
 		final Class<?> actualSerializedClass = SensitiveFieldSerializer.getActualClass(property, this.originalClass);
@@ -149,12 +167,12 @@ public class SensitiveFieldSerializer<Type> extends JsonSerializer<Type> impleme
 		// field serializer.
 		JsonSerializer<Type> serializer;
 		if (sensitiveField) {
-			serializer = new SensitiveFieldSerializer<>(this.originalClass, true, this.delegate);
+			serializer = new SensitiveFieldSerializer<>(this.originalClass, true, sensitiveAttributeRegex, this.delegate);
 		}
 		// If it is not a personal view and it is a personal field, uses the sensitive
 		// field serializer.
 		else if (personalFields) {
-			serializer = new SensitiveFieldSerializer<>(this.originalClass, false, this.delegate);
+			serializer = new SensitiveFieldSerializer<>(this.originalClass, false, sensitiveAttributeRegex, this.delegate);
 		}
 		// If not a sensitive field, uses the delegate.
 		else {
@@ -190,14 +208,31 @@ public class SensitiveFieldSerializer<Type> extends JsonSerializer<Type> impleme
 			}
 			// Masks the value.
 			else {
+				// Gets the string value print size.
 				final String stringValue = Objects.toString(value);
-				final Integer stringValueSize = stringValue.length();
-				final int printSize = (Math.min(this.minMaskRelativeSize.multiply(new BigDecimal(stringValueSize)).intValue(),
+
+				// Gets the content to be masked.
+				// final String regex = "[^@]*";
+				final String regex = this.toBeMaskedRegex;
+				final Matcher toBeMaskedMatcher = Pattern.compile(regex).matcher(stringValue);
+				final boolean matchFound = toBeMaskedMatcher.find();
+				if (!matchFound || !toBeMaskedMatcher.toMatchResult().hasMatch()
+						|| Objects.equals(toBeMaskedMatcher.toMatchResult().start(), toBeMaskedMatcher.toMatchResult().end())) {
+					Pattern.compile(SensitiveFieldSerializer.DEFAULT_TO_BE_MASKED_REGEX).matcher(stringValue);
+					toBeMaskedMatcher.find();
+				}
+				final MatchResult toBeMaskedMatchResult = toBeMaskedMatcher.toMatchResult();
+				final String toBeMaskedContent = stringValue.substring(toBeMaskedMatchResult.start(), toBeMaskedMatchResult.end());
+				final Integer toBeMaskedContentSize = toBeMaskedContent.length();
+				final int toBeMaskedContentPrintSize = (Math.min(this.minMaskRelativeSize.multiply(new BigDecimal(toBeMaskedContentSize)).intValue(),
 						SensitiveFieldSerializer.MASK_BASE.length() - this.minMaskAbsoluteSize) / 2) * 2;
-				final int actualMaskSize = (SensitiveFieldSerializer.MASK_BASE.length() - printSize);
-				final String printValue = stringValue.substring(0, printSize / 2)
-						+ SensitiveFieldSerializer.MASK_BASE.substring(printSize / 2, (actualMaskSize + (printSize / 2)))
-						+ stringValue.substring(stringValueSize - (printSize / 2));
+
+				// Replaces the content to be masked.
+				final int actualMaskSize = (SensitiveFieldSerializer.MASK_BASE.length() - toBeMaskedContentPrintSize);
+				final String maskedContent = stringValue.substring(0, toBeMaskedContentPrintSize / 2)
+						+ SensitiveFieldSerializer.MASK_BASE.substring(toBeMaskedContentPrintSize / 2, (actualMaskSize + (toBeMaskedContentPrintSize / 2)))
+						+ stringValue.substring(toBeMaskedContentSize - (toBeMaskedContentPrintSize / 2));
+				final String printValue = stringValue.replace(toBeMaskedContent, maskedContent);
 				jsonGenerator.writeString(printValue);
 			}
 		}

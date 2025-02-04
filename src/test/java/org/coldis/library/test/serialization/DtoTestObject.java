@@ -396,7 +396,8 @@ public class DtoTestObject implements Identifiable, Typable {
 	 *
 	 * @return The test14.
 	 */
-	@SensitiveAttribute(toBeMaskedRegex = "[^@]*@")
+	@JsonView(value = { ModelView.Sensitive.class, ModelView.Public.class })
+	@SensitiveAttribute(toBeMaskedRegex = "[^@]*")
 	public String getTest14() {
 		return this.test14;
 	}

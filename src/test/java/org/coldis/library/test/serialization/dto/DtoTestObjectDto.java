@@ -472,7 +472,7 @@ public class DtoTestObjectDto implements Serializable {
 	 * Gets the test14.
 	 * @return The test14.
 	 */
-	
+	@com.fasterxml.jackson.annotation.JsonView({org.coldis.library.model.view.ModelView.Sensitive.class, org.coldis.library.model.view.ModelView.Public.class})@org.coldis.library.serialization.json.SensitiveAttribute(toBeMaskedRegex="[^@]*")
 	public java.lang.String getTest14() {
 		return test14;
 	}

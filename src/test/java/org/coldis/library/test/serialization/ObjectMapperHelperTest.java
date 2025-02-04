@@ -185,11 +185,10 @@ public class ObjectMapperHelperTest {
 		Assertions.assertEquals(originalObject4.getTest11(), originalObject6.getTest11());
 		
 		// Tests sensitive field serialization using SensitiveAttribute annotation.
-//		final String serializedObject7 = ObjectMapperHelper.serialize(this.objectMapper, ObjectMapperHelperTest.TEST_DATA[0], null, false);
-//		final DtoTestObject originalObject7 = ObjectMapperHelper.deserialize(this.objectMapper, serializedObject5, DtoTestObject.class, false);
-//		Assertions.assertFalse(serializedObject1.contains("\"test14\":\"romulo-+-+-+-+-+-+-\""));
-//		Assertions.assertEquals(ObjectMapperHelperTest.TEST_DATA[0].getTest10(), originalObject1.getTest10());
-//		Assertions.assertEquals(ObjectMapperHelperTest.TEST_DATA[0].getTest11(), originalObject1.getTest11());
+		final String serializedObject7 = ObjectMapperHelper.serialize(this.objectMapper, ObjectMapperHelperTest.TEST_DATA[0], ModelView.Public.class, false);
+		final DtoTestObject originalObject7 = ObjectMapperHelper.deserialize(this.objectMapper, serializedObject7, DtoTestObject.class, false);
+		Assertions.assertTrue(serializedObject7.contains("\"test14\":\"-+-+-+-+-+-+-@gmail.com\""));
+		Assertions.assertEquals(null, originalObject7.getTest14());
 
 		
 

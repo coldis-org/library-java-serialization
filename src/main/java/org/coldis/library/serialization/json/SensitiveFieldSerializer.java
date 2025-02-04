@@ -229,9 +229,9 @@ public class SensitiveFieldSerializer<Type> extends JsonSerializer<Type> impleme
 
 				// Replaces the content to be masked.
 				final int actualMaskSize = (SensitiveFieldSerializer.MASK_BASE.length() - toBeMaskedContentPrintSize);
-				final String maskedContent = stringValue.substring(0, toBeMaskedContentPrintSize / 2)
+				final String maskedContent = toBeMaskedContent.substring(0, toBeMaskedContentPrintSize / 2)
 						+ SensitiveFieldSerializer.MASK_BASE.substring(toBeMaskedContentPrintSize / 2, (actualMaskSize + (toBeMaskedContentPrintSize / 2)))
-						+ stringValue.substring(toBeMaskedContentSize - (toBeMaskedContentPrintSize / 2));
+						+ toBeMaskedContent.substring(toBeMaskedContentSize - (toBeMaskedContentPrintSize / 2));
 				final String printValue = stringValue.replace(toBeMaskedContent, maskedContent);
 				jsonGenerator.writeString(printValue);
 			}

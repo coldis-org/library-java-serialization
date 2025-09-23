@@ -53,9 +53,9 @@ public class SensitiveFieldDeserializer<Type> extends JsonDeserializer<Type> imp
 
 		// Gets the view for the field.
 		final JsonView propertyJsonView = (property == null ? null : property.getAnnotation(JsonView.class));
-		final boolean sensitiveField = (propertyJsonView != null)
+		final boolean isSensitiveField = (propertyJsonView != null)
 				&& Arrays.stream(propertyJsonView.value()).anyMatch(view -> ModelView.Sensitive.class.isAssignableFrom(view));
-		final boolean personalFields = (propertyJsonView != null)
+		final boolean isPersonalField = (propertyJsonView != null)
 				&& Arrays.stream(propertyJsonView.value()).anyMatch(view -> ModelView.Personal.class.isAssignableFrom(view));
 
 		// Default deserializer is the String deserializer.
@@ -80,7 +80,7 @@ public class SensitiveFieldDeserializer<Type> extends JsonDeserializer<Type> imp
 
 		// If it is a sensitive field, uses the sensitive field deserializer.
 		JsonDeserializer<Type> deserializer;
-		if (sensitiveField || personalFields) {
+		if (isSensitiveField || isPersonalField) {
 			deserializer = new SensitiveFieldDeserializer<>(this.originalClass, this.delegate);
 		}
 		// If not a sensitive field, uses the delegate.

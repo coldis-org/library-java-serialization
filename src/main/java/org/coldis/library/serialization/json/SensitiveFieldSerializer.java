@@ -130,9 +130,9 @@ public class SensitiveFieldSerializer<Type> extends JsonSerializer<Type> impleme
 
 		// Gets the view for the field.
 		final JsonView propertyJsonView = (property == null ? null : property.getAnnotation(JsonView.class));
-		final boolean sensitiveField = (propertyJsonView != null)
+		final boolean isSensitiveField = (propertyJsonView != null)
 				&& Arrays.stream(propertyJsonView.value()).anyMatch(view -> ModelView.Sensitive.class.isAssignableFrom(view));
-		final boolean personalFields = (propertyJsonView != null)
+		final boolean isPersonalField = (propertyJsonView != null)
 				&& Arrays.stream(propertyJsonView.value()).anyMatch(view -> ModelView.Personal.class.isAssignableFrom(view));
 
 		// Gets the sensitive attribute annotation.
@@ -154,7 +154,7 @@ public class SensitiveFieldSerializer<Type> extends JsonSerializer<Type> impleme
 			if (numberSerializer == null) {
 				this.delegate = (JsonSerializer<Type>) SensitiveFieldSerializer.NUMBER_SERIALIZERS.get(this.originalClass.getName());
 			}
-			if (numberSerializer != null) {
+			else {
 				this.delegate = (JsonSerializer<Type>) numberSerializer;
 			}
 		}
@@ -166,12 +166,12 @@ public class SensitiveFieldSerializer<Type> extends JsonSerializer<Type> impleme
 		// If it is not a sensitive view and it is a sensitive field, uses the sensitive
 		// field serializer.
 		JsonSerializer<Type> serializer;
-		if (sensitiveField) {
+		if (isSensitiveField) {
 			serializer = new SensitiveFieldSerializer<>(this.originalClass, true, sensitiveAttributeRegex, this.delegate);
 		}
 		// If it is not a personal view and it is a personal field, uses the sensitive
 		// field serializer.
-		else if (personalFields) {
+		else if (isPersonalField) {
 			serializer = new SensitiveFieldSerializer<>(this.originalClass, false, sensitiveAttributeRegex, this.delegate);
 		}
 		// If not a sensitive field, uses the delegate.
@@ -196,12 +196,12 @@ public class SensitiveFieldSerializer<Type> extends JsonSerializer<Type> impleme
 			final SerializerProvider serializerProvider) throws IOException {
 		// Gets the active view.
 		final Class<?> activeView = serializerProvider.getActiveView();
-		final boolean noView = (activeView == null);
-		final boolean sensitiveView = (!noView) && ModelView.Sensitive.class.isAssignableFrom(activeView);
-		final boolean personalView = (!noView) && ModelView.Personal.class.isAssignableFrom(activeView);
+		final boolean hasActiveView = (activeView != null);
+		final boolean hasSensitiveActiveView = (hasActiveView) && ModelView.Sensitive.class.isAssignableFrom(activeView);
+		final boolean hasPersonalActiveView = (hasActiveView) && ModelView.Personal.class.isAssignableFrom(activeView);
 
 		// If it is not a personal/sensitive view.
-		if (!noView && ((this.sensitive && !sensitiveView) || !personalView)) {
+		if (hasActiveView && ((this.sensitive && !hasSensitiveActiveView) || !hasPersonalActiveView)) {
 			// Writes the value as null if it is null.
 			if (value == null) {
 				jsonGenerator.writeNull();

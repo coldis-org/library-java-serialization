@@ -218,7 +218,10 @@ public class ObjectMapperHelper {
 			// If errors should not be silently ignored.
 			else {
 				// Throws a de-serialization exception.
-				throw new IntegrationException(new SimpleMessage("deserialization.error"), exception);
+				throw new IntegrationException(
+						new SimpleMessage("deserialization.error", "De-serialization error: " + exception.getClass() + " - " + exception.getLocalizedMessage(),
+								new Object[] { exception.getLocalizedMessage() }),
+						exception);
 			}
 		}
 	}
@@ -256,7 +259,10 @@ public class ObjectMapperHelper {
 			// If errors should not be silently ignored.
 			else {
 				// Throws a de-serialization exception.
-				throw new IntegrationException(new SimpleMessage("deserialization.error"), exception);
+				throw new IntegrationException(
+						new SimpleMessage("deserialization.error", "De-serialization error: " + exception.getClass() + " - " + exception.getLocalizedMessage(),
+								new Object[] { exception.getLocalizedMessage() }),
+						exception);
 			}
 		}
 	}
@@ -293,7 +299,10 @@ public class ObjectMapperHelper {
 			// If errors should not be silently ignored.
 			else {
 				// Throws a serialization exception.
-				throw new IntegrationException(new SimpleMessage("serialization.error"), exception);
+				throw new IntegrationException(
+						new SimpleMessage("serialization.error", "Serialization error: " + exception.getClass() + " - " + exception.getLocalizedMessage(),
+								new Object[] { exception.getLocalizedMessage() }),
+						exception);
 			}
 		}
 	}
@@ -330,7 +339,10 @@ public class ObjectMapperHelper {
 			// If errors should not be silently ignored.
 			else {
 				// Throws a conversion exception.
-				throw new IntegrationException(new SimpleMessage("conversion.error"), exception);
+				throw new IntegrationException(
+						new SimpleMessage("conversion.error", "Conversion error: " + exception.getClass() + " - " + exception.getLocalizedMessage(),
+								new Object[] { exception.getLocalizedMessage() }),
+						exception);
 			}
 		}
 	}
@@ -367,7 +379,10 @@ public class ObjectMapperHelper {
 			// If errors should not be silently ignored.
 			else {
 				// Throws a conversion exception.
-				throw new IntegrationException(new SimpleMessage("conversion.error"), exception);
+				throw new IntegrationException(
+						new SimpleMessage("conversion.error", "Conversion error: " + exception.getClass() + " - " + exception.getLocalizedMessage(),
+								new Object[] { exception.getLocalizedMessage() }),
+						exception);
 			}
 		}
 	}

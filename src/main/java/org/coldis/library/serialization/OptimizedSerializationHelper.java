@@ -7,11 +7,11 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.fury.BaseFury;
-import org.apache.fury.Fury;
-import org.apache.fury.config.CompatibleMode;
-import org.apache.fury.config.FuryBuilder;
-import org.apache.fury.config.Language;
+import org.apache.fory.BaseFory;
+import org.apache.fory.Fory;
+import org.apache.fory.config.CompatibleMode;
+import org.apache.fory.config.ForyBuilder;
+import org.apache.fory.config.Language;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Configuration;
@@ -121,16 +121,16 @@ public class OptimizedSerializationHelper {
 	 * @param  language Language.
 	 * @return          Serializer.
 	 */
-	public static final BaseFury createSerializer(
+	public static final BaseFory createSerializer(
 			final Boolean threadSafe,
 			final Integer minPoolSize,
 			final Integer maxPoolSize,
 			final Language language,
 			final String... packagesNames) {
-		final FuryBuilder furyBuilder = Fury.builder().registerGuavaTypes(false).withLanguage(language).withCompatibleMode(CompatibleMode.COMPATIBLE);
-		furyBuilder.requireClassRegistration(ArrayUtils.isNotEmpty(packagesNames));
-		final BaseFury fury = (threadSafe ? (((minPoolSize != null) && (maxPoolSize != null)) ? furyBuilder.buildThreadSafeFuryPool(minPoolSize, maxPoolSize)
-				: furyBuilder.buildThreadSafeFury()) : furyBuilder.build());
+		final ForyBuilder foryBuilder = Fory.builder().registerGuavaTypes(false).withLanguage(language).withCompatibleMode(CompatibleMode.COMPATIBLE);
+		foryBuilder.requireClassRegistration(ArrayUtils.isNotEmpty(packagesNames));
+		final BaseFory fory = (threadSafe ? ((maxPoolSize != null) ? foryBuilder.buildThreadSafeForyPool(maxPoolSize)
+				: foryBuilder.buildThreadSafeFory()) : foryBuilder.build());
 		if (ArrayUtils.isNotEmpty(packagesNames)) {
 			final Map<Class<?>, String> modelClasses = new HashMap<>();
 			modelClasses
@@ -143,10 +143,10 @@ public class OptimizedSerializationHelper {
 			modelClasses.forEach((
 					clazz,
 					className) -> {
-				fury.register(clazz);
+				fory.register(clazz);
 			});
 		}
-		return fury;
+		return fory;
 	}
 
 }

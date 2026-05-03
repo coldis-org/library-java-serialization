@@ -2,8 +2,9 @@ package org.coldis.library.test.serialization;
 
 import java.util.List;
 
-import org.apache.fury.Fury;
-import org.apache.fury.config.Language;
+import org.apache.fory.Fory;
+import org.apache.fory.config.CompatibleMode;
+import org.apache.fory.config.Language;
 import org.coldis.library.serialization.OptimizedSerializationHelper;
 import org.coldis.library.test.serialization.dto.DtoTestObject2Dto;
 import org.coldis.library.test.serialization.dto.DtoTestObjectDto;
@@ -27,21 +28,21 @@ public class OptimizedSerializationHelperTest {
 	/**
 	 * Object mapper.
 	 */
-	private static Fury serializer1;
+	private static Fory serializer1;
 
 	/**
 	 * Object mapper.
 	 */
-	private static Fury serializer2;
+	private static Fory serializer2;
 
 	static {
-		OptimizedSerializationHelperTest.serializer1 = (Fury) OptimizedSerializationHelper.createSerializer(false, null, null, Language.JAVA,
+		OptimizedSerializationHelperTest.serializer1 = (Fory) OptimizedSerializationHelper.createSerializer(false, null, null, Language.JAVA,
 		"org.coldis.library.test.serialization");
-//		OptimizedSerializationHelperTest.serializer1 = (Fury) OptimizedSerializationHelper.createSerializer(false, null, null, Language.XLANG,
+//		OptimizedSerializationHelperTest.serializer1 = (Fory) OptimizedSerializationHelper.createSerializer(false, null, null, Language.XLANG,
 //		"org.coldis.library.test.serializationX");
 //		OptimizedSerializationHelperTest.serializer1.register(DtoTestObjectDto.class, DtoTestObject.class.getName());
 //		OptimizedSerializationHelperTest.serializer1.register(DtoTestObject2Dto.class, DtoTestObject2.class.getName());
-		OptimizedSerializationHelperTest.serializer2 = (Fury) OptimizedSerializationHelper.createSerializer(false, null, null, Language.XLANG,
+		OptimizedSerializationHelperTest.serializer2 = (Fory) OptimizedSerializationHelper.createSerializer(false, null, null, Language.XLANG,
 				"org.coldis.library.test.serializationX");
 		OptimizedSerializationHelperTest.serializer2.register(DtoTestObject.class, DtoTestObject.class.getName());
 		OptimizedSerializationHelperTest.serializer2.register(DtoTestObject2.class, DtoTestObject2.class.getName());
@@ -93,6 +94,45 @@ public class OptimizedSerializationHelperTest {
 			Assertions.assertEquals(originalDto, reconvertedDto4);
 
 		}
+	}
+
+	/**
+	 * Serializes a model and deserializes the bytes into the corresponding DTO,
+	 * and vice versa, on the same Fory instance configured in COMPATIBLE mode.
+	 */
+	@Test
+	public void test02ModelDtoCrossClass() throws Exception {
+		final Fory fory = Fory.builder().registerGuavaTypes(false).withLanguage(Language.JAVA).withCompatibleMode(CompatibleMode.COMPATIBLE)
+				.requireClassRegistration(false).build();
+
+		final DtoTestObject2 nested = new DtoTestObject2();
+		nested.setId(1L);
+		nested.setTest("nested");
+
+		final DtoTestObject model = new DtoTestObject();
+		model.setId(42L);
+		model.setTest1(nested);
+		model.setTest3("three");
+		model.setTest7(7);
+		model.setTest9(99);
+		model.setTest11("eleven");
+
+		final byte[] modelBytes = fory.serialize(model);
+		final DtoTestObjectDto dto = fory.deserialize(modelBytes, DtoTestObjectDto.class);
+		Assertions.assertEquals(model.getId(), dto.getId());
+		Assertions.assertNotNull(dto.getTest1());
+		Assertions.assertEquals(model.getTest1().getId(), dto.getTest1().getId());
+		Assertions.assertEquals(model.getTest1().getTest(), dto.getTest1().getTest());
+		Assertions.assertEquals(model.getTest7(), dto.getTest7());
+		Assertions.assertEquals(model.getTest9(), dto.getTest9());
+		Assertions.assertEquals(model.getTest11(), dto.getTest11());
+
+		final byte[] dtoBytes = fory.serialize(dto);
+		final DtoTestObject roundTrip = fory.deserialize(dtoBytes, DtoTestObject.class);
+		Assertions.assertEquals(model.getId(), roundTrip.getId());
+		Assertions.assertEquals(model.getTest7(), roundTrip.getTest7());
+		Assertions.assertEquals(model.getTest9(), roundTrip.getTest9());
+		Assertions.assertEquals(model.getTest11(), roundTrip.getTest11());
 	}
 
 }

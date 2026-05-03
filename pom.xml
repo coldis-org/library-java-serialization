@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.coldis</groupId>
 		<artifactId>configuration</artifactId>
-		<version>2.0.142</version>
+		<version>2.0.151</version>
 	</parent>
 
 	<groupId>org.coldis.library</groupId>
@@ -101,12 +101,12 @@
 			<artifactId>commons-lang3</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.fury</groupId>
-			<artifactId>fury-core</artifactId>
+			<groupId>org.apache.fory</groupId>
+			<artifactId>fory-core</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.fury</groupId>
-			<artifactId>fury-format</artifactId>
+			<groupId>org.apache.fory</groupId>
+			<artifactId>fory-format</artifactId>
 		</dependency>
 
 		<dependency>

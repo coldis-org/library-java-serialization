@@ -41,9 +41,33 @@ public class OptimizedSerializationHelper {
 	private static final Logger LOGGER = LoggerFactory.getLogger(OptimizedSerializationHelper.class);
 
 	/**
+	 * Annotation classes whose presence excludes a scanned class from
+	 * Fory registration. AspectJ is loaded softly so this module does
+	 * not need a compile-time dependency on aspectjrt.
+	 */
+	private static final Set<Class<? extends Annotation>> EXCLUDED_ANNOTATIONS = OptimizedSerializationHelper.buildExcludedAnnotations();
+
+	@SuppressWarnings("unchecked")
+	private static Set<Class<? extends Annotation>> buildExcludedAnnotations() {
+		final java.util.LinkedHashSet<Class<? extends Annotation>> excluded = new java.util.LinkedHashSet<>();
+		excluded.add(Component.class);
+		excluded.add(Controller.class);
+		excluded.add(Service.class);
+		excluded.add(Repository.class);
+		excluded.add(Configuration.class);
+		try {
+			excluded.add((Class<? extends Annotation>) Class.forName("org.aspectj.lang.annotation.Aspect"));
+		}
+		catch (final ClassNotFoundException notOnClasspath) {
+			OptimizedSerializationHelper.LOGGER.debug("AspectJ @Aspect not on classpath; skipping from exclusion set.");
+		}
+		return Set.copyOf(excluded);
+	}
+
+	/**
 	 * No annotation type filter.
 	 */
-	static class NoAnnotationTypeFilter extends AbstractTypeHierarchyTraversingFilter {
+	public static class NoAnnotationTypeFilter extends AbstractTypeHierarchyTraversingFilter {
 
 		/** Without annotations. */
 		private final Set<Class<? extends Annotation>> withoutAnnotations;
@@ -139,8 +163,7 @@ public class OptimizedSerializationHelper {
 			final Map<Class<?>, String> modelClasses = new HashMap<>();
 			modelClasses
 					.putAll(ObjectMapperHelper.getModelClasses(
-							new OptimizedSerializationHelper.NoAnnotationTypeFilter(
-									Set.of(Component.class, Controller.class, Service.class, Repository.class, Configuration.class), true, true),
+							new OptimizedSerializationHelper.NoAnnotationTypeFilter(OptimizedSerializationHelper.EXCLUDED_ANNOTATIONS, true, false),
 							packagesNames));
 			final Map<String, Class<?>> canonicalByTypeName = new HashMap<>();
 			modelClasses.keySet().forEach(clazz -> {

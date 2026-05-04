@@ -2,12 +2,17 @@ package org.coldis.library.test.serialization;
 
 import java.util.List;
 
+import org.apache.fory.BaseFory;
 import org.apache.fory.Fory;
 import org.apache.fory.config.CompatibleMode;
 import org.apache.fory.config.Language;
+import org.coldis.library.serialization.ObjectMapperHelper;
 import org.coldis.library.serialization.OptimizedSerializationHelper;
+import org.coldis.library.test.serialization.crossproc.dto.CrossModelDto;
+import org.coldis.library.test.serialization.crossproc.model.CrossModel;
 import org.coldis.library.test.serialization.dto.DtoTestObject2Dto;
 import org.coldis.library.test.serialization.dto.DtoTestObjectDto;
+import org.coldis.library.test.serialization.excluded.ExcludedService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -238,6 +243,70 @@ public class OptimizedSerializationHelperTest {
 		sharedName.register(DtoTestObject.class, "", "shared.Conflict");
 		Assertions.assertThrows(IllegalArgumentException.class,
 				() -> sharedName.register(DtoTestObjectDto.class, "", "shared.Conflict"));
+	}
+
+	/**
+	 * Helper-built Fory round-trips both Model (canonical, registered under
+	 * typeName) and DTO (registered under FQN as fallback) on the same
+	 * instance.
+	 */
+	@Test
+	public void test06HelperCanonicalRoundTrips() throws Exception {
+		final BaseFory fory = OptimizedSerializationHelper.createSerializer(false, null, null, Language.JAVA, "org.coldis.library.test.serialization");
+
+		final DtoTestObject model = new DtoTestObject();
+		model.setId(42L);
+		model.setTest11("model");
+		final DtoTestObject roundTripModel = (DtoTestObject) fory.deserialize(fory.serialize(model));
+		Assertions.assertEquals(42L, roundTripModel.getId());
+		Assertions.assertEquals("model", roundTripModel.getTest11());
+
+		final DtoTestObjectDto dto = new DtoTestObjectDto().withId(7L).withTest11("dto");
+		final DtoTestObjectDto roundTripDto = (DtoTestObjectDto) fory.deserialize(fory.serialize(dto));
+		Assertions.assertEquals(7L, roundTripDto.getId());
+		Assertions.assertEquals("dto", roundTripDto.getTest11());
+	}
+
+	/**
+	 * Verifies the package-scan filter keeps Spring-stereotype-annotated
+	 * classes out of the discovered set, so they never reach Fory
+	 * registration. Tested via ObjectMapperHelper.getModelClasses directly
+	 * because Fory's serialize permits unregistered classes (only
+	 * deserialization enforces requireClassRegistration).
+	 */
+	@Test
+	public void test07HelperExcludesSpringComponents() throws Exception {
+		final java.util.Map<Class<?>, String> scanned = ObjectMapperHelper.getModelClasses(
+				new OptimizedSerializationHelper.NoAnnotationTypeFilter(
+						java.util.Set.of(org.springframework.stereotype.Component.class, org.springframework.stereotype.Controller.class,
+								org.springframework.stereotype.Service.class, org.springframework.stereotype.Repository.class,
+								org.springframework.context.annotation.Configuration.class),
+						true, false),
+				"org.coldis.library.test.serialization.excluded");
+		Assertions.assertFalse(scanned.containsKey(ExcludedService.class));
+	}
+
+	/**
+	 * Cross-process simulation through the helper. Producer scans only the
+	 * model subpackage; consumer scans only the DTO subpackage. The shared
+	 * Typable.getTypeName() makes the DTO canonical on the consumer side
+	 * because the model is absent there. Producer-side Model bytes resolve
+	 * directly into a DTO instance on the consumer side.
+	 */
+	@Test
+	public void test08CrossProcessThroughHelper() throws Exception {
+		final BaseFory producer = OptimizedSerializationHelper.createSerializer(false, null, null, Language.JAVA,
+				"org.coldis.library.test.serialization.crossproc.model");
+		final BaseFory consumer = OptimizedSerializationHelper.createSerializer(false, null, null, Language.JAVA,
+				"org.coldis.library.test.serialization.crossproc.dto");
+
+		final CrossModel model = new CrossModel();
+		model.setId(99L);
+		model.setLabel("hello");
+
+		final CrossModelDto dto = (CrossModelDto) consumer.deserialize(producer.serialize(model));
+		Assertions.assertEquals(99L, dto.getId());
+		Assertions.assertEquals("hello", dto.getLabel());
 	}
 
 	/**

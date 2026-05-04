@@ -2,7 +2,10 @@ package org.coldis.library.serialization;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Inherited;
+import java.lang.reflect.Constructor;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -12,6 +15,7 @@ import org.apache.fory.Fory;
 import org.apache.fory.config.CompatibleMode;
 import org.apache.fory.config.ForyBuilder;
 import org.apache.fory.config.Language;
+import org.coldis.library.model.Typable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Configuration;
@@ -138,15 +142,61 @@ public class OptimizedSerializationHelper {
 							new OptimizedSerializationHelper.NoAnnotationTypeFilter(
 									Set.of(Component.class, Controller.class, Service.class, Repository.class, Configuration.class), true, true),
 							packagesNames));
-			OptimizedSerializationHelper.LOGGER.info("Registering {} classes in optimized serialization.", modelClasses.size());
-			OptimizedSerializationHelper.LOGGER.debug("Classes reistered: {}", modelClasses.keySet().stream().map(Class::getName).toArray());
-			modelClasses.forEach((
-					clazz,
-					className) -> {
-				fory.register(clazz);
+			final Map<String, Class<?>> canonicalByTypeName = new HashMap<>();
+			modelClasses.keySet().forEach(clazz -> {
+				final String typeName = OptimizedSerializationHelper.resolveTypeName(clazz);
+				if (typeName != null) {
+					final Class<?> current = canonicalByTypeName.get(typeName);
+					if ((current == null) || (OptimizedSerializationHelper.isDtoClass(current) && !OptimizedSerializationHelper.isDtoClass(clazz))) {
+						canonicalByTypeName.put(typeName, clazz);
+					}
+				}
+			});
+			final Set<Class<?>> canonicalClasses = new HashSet<>(canonicalByTypeName.values());
+			OptimizedSerializationHelper.LOGGER.info("Registering {} classes under shared type names and {} other classes in optimized serialization.",
+					canonicalClasses.size(), modelClasses.size() - canonicalClasses.size());
+			OptimizedSerializationHelper.LOGGER.debug("Canonical type names: {}", canonicalByTypeName);
+			modelClasses.keySet().forEach(clazz -> {
+				if (canonicalClasses.contains(clazz)) {
+					fory.register(clazz, "", OptimizedSerializationHelper.resolveTypeName(clazz));
+				}
+				else {
+					fory.register(clazz, "", clazz.getName());
+				}
 			});
 		}
 		return fory;
+	}
+
+	/**
+	 * Resolves the shared logical type name for a class via Typable.getTypeName(),
+	 * by instantiating a default instance through its no-arg constructor. Returns
+	 * null when the class is not Typable or has no usable no-arg constructor.
+	 */
+	private static String resolveTypeName(
+			final Class<?> clazz) {
+		String typeName = null;
+		if (Typable.class.isAssignableFrom(clazz)) {
+			try {
+				final Constructor<?> constructor = clazz.getDeclaredConstructor();
+				constructor.setAccessible(true);
+				typeName = ((Typable) constructor.newInstance()).getTypeName();
+			}
+			catch (final Throwable error) {
+				// Falls back to no shared name; class is registered with default identifier.
+			}
+		}
+		return typeName;
+	}
+
+	/**
+	 * Detects DTO classes by the presence of org.coldis.library.dto.DtoOrigin
+	 * without taking a compile-time dependency on the dto module.
+	 */
+	private static boolean isDtoClass(
+			final Class<?> clazz) {
+		return Arrays.stream(clazz.getAnnotations())
+				.anyMatch(annotation -> "org.coldis.library.dto.DtoOrigin".equals(annotation.annotationType().getName()));
 	}
 
 }

@@ -220,6 +220,27 @@ public class OptimizedSerializationHelperTest {
 	}
 
 	/**
+	 * Documents two Fory registration constraints that shape the helper's
+	 * single-name-per-class strategy: a class can only be registered under
+	 * one name (Fory auto-reserves the FQN slot), and two classes cannot
+	 * share the same name.
+	 */
+	@Test
+	public void testRegistrationConstraints() throws Exception {
+		final Fory dualName = Fory.builder().registerGuavaTypes(false).withLanguage(Language.JAVA).withCompatibleMode(CompatibleMode.COMPATIBLE)
+				.requireClassRegistration(true).build();
+		dualName.register(DtoTestObject.class, "shared", "TestObj");
+		Assertions.assertThrows(IllegalArgumentException.class,
+				() -> dualName.register(DtoTestObject.class, "", DtoTestObject.class.getName()));
+
+		final Fory sharedName = Fory.builder().registerGuavaTypes(false).withLanguage(Language.JAVA).withCompatibleMode(CompatibleMode.COMPATIBLE)
+				.requireClassRegistration(true).build();
+		sharedName.register(DtoTestObject.class, "", "shared.Conflict");
+		Assertions.assertThrows(IllegalArgumentException.class,
+				() -> sharedName.register(DtoTestObjectDto.class, "", "shared.Conflict"));
+	}
+
+	/**
 	 * Two-instance pattern with a List of nested objects.
 	 */
 	@Test

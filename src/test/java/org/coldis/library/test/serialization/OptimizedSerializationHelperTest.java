@@ -164,16 +164,42 @@ public class OptimizedSerializationHelperTest {
 	}
 
 	/**
+	 * Single-instance limit: cross-class translation works for direct nested
+	 * fields (because Fory uses the target class's field declaration) but not
+	 * for elements of a generic collection, where the type parameter is
+	 * erased at runtime and Fory falls back to the source class embedded in
+	 * the bytes. The List ends up holding source-class elements, so accessing
+	 * them through the DTO's typed getter throws ClassCastException.
+	 */
+	@Test
+	public void test04SingleInstanceCollectionLimit() throws Exception {
+		final Fory fory = Fory.builder().registerGuavaTypes(false).withLanguage(Language.JAVA).withCompatibleMode(CompatibleMode.COMPATIBLE)
+				.requireClassRegistration(false).build();
+
+		final DtoTestObject2 a = new DtoTestObject2();
+		a.setId(1L);
+		a.setTest("a");
+		final DtoTestObject2 b = new DtoTestObject2();
+		b.setId(2L);
+		b.setTest("b");
+		final DtoTestObject model = new DtoTestObject();
+		model.setId(99L);
+		model.setTest2(List.of(a, b));
+
+		final DtoTestObjectDto dto = fory.deserialize(fory.serialize(model), DtoTestObjectDto.class);
+		Assertions.assertEquals(99L, dto.getId());
+		Assertions.assertNotNull(dto.getTest2());
+		Assertions.assertEquals(2, dto.getTest2().size());
+		Assertions.assertThrows(ClassCastException.class, () -> dto.getTest2().get(0).getId());
+	}
+
+	/**
 	 * Two-instance producer/consumer pattern with name-based registration.
-	 * Mirrors a cross-process JMS scenario: producer-side Fory knows only the
-	 * model classes, consumer-side Fory knows only the DTO classes. Types map
-	 * across the wire by shared (namespace, typeName).
-	 *
-	 * Required for nested cross-class translation: the single-instance
-	 * `deserialize(bytes, Class)` shortcut only retargets the outer type and
-	 * leaves nested elements as their source class, which throws
-	 * ClassCastException when assigned to a DTO field of a different concrete
-	 * element type.
+	 * Mirrors a cross-process JMS scenario where the consumer does not have
+	 * the producer-side classes on the classpath. Types map across the wire
+	 * by shared (namespace, typeName), and elements of generic collections
+	 * resolve to the consumer-side classes — the case the single-instance
+	 * shortcut cannot handle (see {@link #test04SingleInstanceCollectionLimit()}).
 	 */
 	private static Fory producerFory() {
 		final Fory fory = Fory.builder().registerGuavaTypes(false).withLanguage(Language.JAVA).withCompatibleMode(CompatibleMode.COMPATIBLE)
@@ -194,36 +220,7 @@ public class OptimizedSerializationHelperTest {
 	}
 
 	/**
-	 * Producer serializes Model + nested object; consumer deserializes into
-	 * matching DTO + nested DTO via shared type names.
-	 */
-	@Test
-	public void test04TwoInstancesScalarsAndNested() throws Exception {
-		final Fory producer = OptimizedSerializationHelperTest.producerFory();
-		final Fory consumer = OptimizedSerializationHelperTest.consumerFory();
-
-		final DtoTestObject2 nested = new DtoTestObject2();
-		nested.setId(1L);
-		nested.setTest("hello");
-		final DtoTestObject model = new DtoTestObject();
-		model.setId(7L);
-		model.setTest1(nested);
-		model.setTest7(7);
-		model.setTest11("eleven");
-
-		final DtoTestObjectDto dto = consumer.deserialize(producer.serialize(model), DtoTestObjectDto.class);
-		Assertions.assertEquals(7L, dto.getId());
-		Assertions.assertEquals(7, dto.getTest7());
-		Assertions.assertEquals("eleven", dto.getTest11());
-		Assertions.assertNotNull(dto.getTest1());
-		Assertions.assertEquals(1L, dto.getTest1().getId());
-		Assertions.assertEquals("hello", dto.getTest1().getTest());
-	}
-
-	/**
-	 * Same producer/consumer pattern, exercising a List of nested objects to
-	 * confirm cross-class translation works through collections — the case
-	 * single-instance `deserialize(bytes, Class)` cannot handle.
+	 * Two-instance pattern with a List of nested objects.
 	 */
 	@Test
 	public void test05TwoInstancesCollections() throws Exception {

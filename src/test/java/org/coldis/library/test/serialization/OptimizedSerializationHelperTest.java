@@ -8,6 +8,8 @@ import org.apache.fory.config.CompatibleMode;
 import org.apache.fory.config.Language;
 import org.coldis.library.serialization.ObjectMapperHelper;
 import org.coldis.library.serialization.OptimizedSerializationHelper;
+import org.coldis.library.test.serialization.conflict.SharedNameAlias;
+import org.coldis.library.test.serialization.conflict.SharedNameOwner;
 import org.coldis.library.test.serialization.crossproc.dto.CrossModelDto;
 import org.coldis.library.test.serialization.crossproc.model.CrossModel;
 import org.coldis.library.test.serialization.dto.DtoTestObject2Dto;
@@ -307,6 +309,27 @@ public class OptimizedSerializationHelperTest {
 		final CrossModelDto dto = (CrossModelDto) consumer.deserialize(producer.serialize(model));
 		Assertions.assertEquals(99L, dto.getId());
 		Assertions.assertEquals("hello", dto.getLabel());
+	}
+
+	/**
+	 * Two unrelated classes reporting the same Typable.getTypeName() must
+	 * not crash startup. The first wins the typeName slot; the second
+	 * falls back to its FQN. Both stay round-trippable on the resulting
+	 * Fory.
+	 */
+	@Test
+	public void test09HelperHandlesTypeNameCollision() throws Exception {
+		final BaseFory fory = OptimizedSerializationHelper.createSerializer(false, null, null, Language.JAVA, "org.coldis.library.test.serialization.conflict");
+
+		final SharedNameOwner owner = new SharedNameOwner();
+		owner.setValue(123L);
+		final SharedNameOwner ownerRoundTrip = (SharedNameOwner) fory.deserialize(fory.serialize(owner));
+		Assertions.assertEquals(123L, ownerRoundTrip.getValue());
+
+		final SharedNameAlias alias = new SharedNameAlias();
+		alias.setDescription("alias");
+		final SharedNameAlias aliasRoundTrip = (SharedNameAlias) fory.deserialize(fory.serialize(alias));
+		Assertions.assertEquals("alias", aliasRoundTrip.getDescription());
 	}
 
 	/**

@@ -180,11 +180,27 @@ public class OptimizedSerializationHelper {
 					canonicalClasses.size(), modelClasses.size() - canonicalClasses.size());
 			OptimizedSerializationHelper.LOGGER.debug("Canonical type names: {}", canonicalByTypeName);
 			modelClasses.keySet().forEach(clazz -> {
-				if (canonicalClasses.contains(clazz)) {
-					fory.register(clazz, "", OptimizedSerializationHelper.resolveTypeName(clazz));
+				final String preferredName = canonicalClasses.contains(clazz) ? OptimizedSerializationHelper.resolveTypeName(clazz) : clazz.getName();
+				final String fallbackName = clazz.getName();
+				try {
+					fory.register(clazz, "", preferredName);
 				}
-				else {
-					fory.register(clazz, "", clazz.getName());
+				catch (final IllegalArgumentException conflict) {
+					if (!fallbackName.equals(preferredName)) {
+						try {
+							fory.register(clazz, "", fallbackName);
+							OptimizedSerializationHelper.LOGGER.warn("Registered {} under FQN after preferred name '{}' was taken: {}", clazz.getName(),
+									preferredName, conflict.getMessage());
+						}
+						catch (final IllegalArgumentException fallbackConflict) {
+							OptimizedSerializationHelper.LOGGER.warn("Skipping optimized serialization registration of {} (preferred='{}', fallback='{}'): {}",
+									clazz.getName(), preferredName, fallbackName, fallbackConflict.getMessage());
+						}
+					}
+					else {
+						OptimizedSerializationHelper.LOGGER.warn("Skipping optimized serialization registration of {} under name '{}': {}", clazz.getName(),
+								preferredName, conflict.getMessage());
+					}
 				}
 			});
 		}

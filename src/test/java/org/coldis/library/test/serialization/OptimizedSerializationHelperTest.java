@@ -135,4 +135,119 @@ public class OptimizedSerializationHelperTest {
 		Assertions.assertEquals(model.getTest11(), roundTrip.getTest11());
 	}
 
+	/**
+	 * Schema mismatch: test3 exists on the model but is excluded from the DTO via
+	 * @DtoAttribute(ignore=true). Both directions must succeed; the unmatched
+	 * field is silently dropped.
+	 */
+	@Test
+	public void test03SchemaMismatch() throws Exception {
+		final Fory fory = Fory.builder().registerGuavaTypes(false).withLanguage(Language.JAVA).withCompatibleMode(CompatibleMode.COMPATIBLE)
+				.requireClassRegistration(false).build();
+
+		final DtoTestObject model = new DtoTestObject();
+		model.setId(1L);
+		model.setTest3("only-on-model");
+		model.setTest7(7);
+		model.setTest11("eleven");
+
+		final DtoTestObjectDto dto = fory.deserialize(fory.serialize(model), DtoTestObjectDto.class);
+		Assertions.assertEquals(1L, dto.getId());
+		Assertions.assertEquals(7, dto.getTest7());
+		Assertions.assertEquals("eleven", dto.getTest11());
+
+		final DtoTestObjectDto dtoOnly = new DtoTestObjectDto().withId(2L).withTest11("dto-only");
+		final DtoTestObject reverseTrip = fory.deserialize(fory.serialize(dtoOnly), DtoTestObject.class);
+		Assertions.assertEquals(2L, reverseTrip.getId());
+		Assertions.assertEquals("dto-only", reverseTrip.getTest11());
+		Assertions.assertNull(reverseTrip.getTest3());
+	}
+
+	/**
+	 * Two-instance producer/consumer pattern with name-based registration.
+	 * Mirrors a cross-process JMS scenario: producer-side Fory knows only the
+	 * model classes, consumer-side Fory knows only the DTO classes. Types map
+	 * across the wire by shared (namespace, typeName).
+	 *
+	 * Required for nested cross-class translation: the single-instance
+	 * `deserialize(bytes, Class)` shortcut only retargets the outer type and
+	 * leaves nested elements as their source class, which throws
+	 * ClassCastException when assigned to a DTO field of a different concrete
+	 * element type.
+	 */
+	private static Fory producerFory() {
+		final Fory fory = Fory.builder().registerGuavaTypes(false).withLanguage(Language.JAVA).withCompatibleMode(CompatibleMode.COMPATIBLE)
+				.requireClassRegistration(true).build();
+		fory.register(DtoTestObject.class, "coldis.test", "TestObj");
+		fory.register(DtoTestObject2.class, "coldis.test", "TestObj2");
+		fory.register(TestEnum.class, "coldis.test", "TestEnum");
+		return fory;
+	}
+
+	private static Fory consumerFory() {
+		final Fory fory = Fory.builder().registerGuavaTypes(false).withLanguage(Language.JAVA).withCompatibleMode(CompatibleMode.COMPATIBLE)
+				.requireClassRegistration(true).build();
+		fory.register(DtoTestObjectDto.class, "coldis.test", "TestObj");
+		fory.register(DtoTestObject2Dto.class, "coldis.test", "TestObj2");
+		fory.register(TestEnum.class, "coldis.test", "TestEnum");
+		return fory;
+	}
+
+	/**
+	 * Producer serializes Model + nested object; consumer deserializes into
+	 * matching DTO + nested DTO via shared type names.
+	 */
+	@Test
+	public void test04TwoInstancesScalarsAndNested() throws Exception {
+		final Fory producer = OptimizedSerializationHelperTest.producerFory();
+		final Fory consumer = OptimizedSerializationHelperTest.consumerFory();
+
+		final DtoTestObject2 nested = new DtoTestObject2();
+		nested.setId(1L);
+		nested.setTest("hello");
+		final DtoTestObject model = new DtoTestObject();
+		model.setId(7L);
+		model.setTest1(nested);
+		model.setTest7(7);
+		model.setTest11("eleven");
+
+		final DtoTestObjectDto dto = consumer.deserialize(producer.serialize(model), DtoTestObjectDto.class);
+		Assertions.assertEquals(7L, dto.getId());
+		Assertions.assertEquals(7, dto.getTest7());
+		Assertions.assertEquals("eleven", dto.getTest11());
+		Assertions.assertNotNull(dto.getTest1());
+		Assertions.assertEquals(1L, dto.getTest1().getId());
+		Assertions.assertEquals("hello", dto.getTest1().getTest());
+	}
+
+	/**
+	 * Same producer/consumer pattern, exercising a List of nested objects to
+	 * confirm cross-class translation works through collections — the case
+	 * single-instance `deserialize(bytes, Class)` cannot handle.
+	 */
+	@Test
+	public void test05TwoInstancesCollections() throws Exception {
+		final Fory producer = OptimizedSerializationHelperTest.producerFory();
+		final Fory consumer = OptimizedSerializationHelperTest.consumerFory();
+
+		final DtoTestObject2 a = new DtoTestObject2();
+		a.setId(1L);
+		a.setTest("a");
+		final DtoTestObject2 b = new DtoTestObject2();
+		b.setId(2L);
+		b.setTest("b");
+		final DtoTestObject model = new DtoTestObject();
+		model.setId(99L);
+		model.setTest2(List.of(a, b));
+
+		final DtoTestObjectDto dto = consumer.deserialize(producer.serialize(model), DtoTestObjectDto.class);
+		Assertions.assertEquals(99L, dto.getId());
+		Assertions.assertNotNull(dto.getTest2());
+		Assertions.assertEquals(2, dto.getTest2().size());
+		Assertions.assertEquals(1L, dto.getTest2().get(0).getId());
+		Assertions.assertEquals("a", dto.getTest2().get(0).getTest());
+		Assertions.assertEquals(2L, dto.getTest2().get(1).getId());
+		Assertions.assertEquals("b", dto.getTest2().get(1).getTest());
+	}
+
 }

@@ -407,4 +407,25 @@ public class ObjectMapperHelper {
 				resumeOnErrors);
 	}
 
+	/**
+	 * Clones a given object via a JSON round-trip.
+	 *
+	 * @param  <TargetType>   Target object type.
+	 * @param  objectMapper   Object mapper.
+	 * @param  object         Original object.
+	 * @param  view           View.
+	 * @param  objectType     Object type.
+	 * @param  resumeOnErrors If errors should be ignored.
+	 * @return                The cloned object.
+	 */
+	public static <TargetType> TargetType deepClone(
+			final ObjectMapper objectMapper,
+			final Object object,
+			final Class<?> view,
+			final Class<TargetType> objectType,
+			final Boolean resumeOnErrors) {
+		return ObjectMapperHelper.deserialize(objectMapper, ObjectMapperHelper.serialize(objectMapper, object, view, resumeOnErrors), objectType,
+				resumeOnErrors);
+	}
+
 }

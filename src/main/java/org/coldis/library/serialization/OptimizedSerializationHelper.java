@@ -246,22 +246,32 @@ public class OptimizedSerializationHelper {
 	}
 
 	/**
-	 * Resolves the shared logical type name for a class via Typable.getTypeName(),
-	 * by instantiating a default instance through its no-arg constructor. Returns
-	 * null when the class is not Typable or has no usable no-arg constructor.
+	 * Resolves the shared logical type name for a class. Tries the
+	 * {@link Typable} interface first, then falls back to a {@code
+	 * getTypeName()} method (so generated DTOs that don't implement Typable
+	 * still group with their origin Model under the same name). Both paths
+	 * instantiate a default instance via a no-arg constructor and call the
+	 * method on it. Returns null when no typeName can be resolved.
 	 */
 	private static String resolveTypeName(
 			final Class<?> clazz) {
 		String typeName = null;
-		if (Typable.class.isAssignableFrom(clazz)) {
-			try {
-				final Constructor<?> constructor = clazz.getDeclaredConstructor();
-				constructor.setAccessible(true);
-				typeName = ((Typable) constructor.newInstance()).getTypeName();
+		try {
+			final Constructor<?> constructor = clazz.getDeclaredConstructor();
+			constructor.setAccessible(true);
+			final Object instance = constructor.newInstance();
+			if (instance instanceof final Typable typable) {
+				typeName = typable.getTypeName();
 			}
-			catch (final Throwable error) {
-				// Falls back to no shared name; class is registered with default identifier.
+			else {
+				final java.lang.reflect.Method getter = clazz.getMethod("getTypeName");
+				if ((getter.getReturnType() == String.class) && !java.lang.reflect.Modifier.isStatic(getter.getModifiers())) {
+					typeName = (String) getter.invoke(instance);
+				}
 			}
+		}
+		catch (final Throwable error) {
+			// Falls back to no shared name; class is registered with default identifier.
 		}
 		return typeName;
 	}

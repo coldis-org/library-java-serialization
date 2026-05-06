@@ -183,10 +183,31 @@ public class OptimizedSerializationHelper {
 			final Language language,
 			final boolean preferDto,
 			final String... packagesNames) {
-		final ForyBuilder foryBuilder = Fory.builder().registerGuavaTypes(false).withLanguage(language).withCompatibleMode(CompatibleMode.COMPATIBLE);
+		final ForyBuilder foryBuilder = Fory.builder().registerGuavaTypes(false).withLanguage(language).withCompatibleMode(CompatibleMode.COMPATIBLE)
+				.withDeserializeUnknownClass(true);
 		foryBuilder.requireClassRegistration(ArrayUtils.isNotEmpty(packagesNames));
 		final BaseFory fory = (threadSafe ? ((maxPoolSize != null) ? foryBuilder.buildThreadSafeForyPool(maxPoolSize)
 				: foryBuilder.buildThreadSafeFory()) : foryBuilder.build());
+		// Fory's auto-registration for deserializeUnknownClass=true only covers
+		// UnknownStruct/UnknownEmptyStruct. UnknownEnum (and the array variants of all three) are
+		// missed, which makes the security gate reject otherwise valid cross-class deserializations
+		// when a DTO carries fields the Model doesn't declare. Register them explicitly so the
+		// receiver can fall through to a placeholder instead of failing.
+		final Class<?>[] unknownPlaceholders = { org.apache.fory.serializer.UnknownClass.UnknownEnum.class,
+				org.apache.fory.serializer.UnknownClass.UnknownEnum1DArray, org.apache.fory.serializer.UnknownClass.UnknownEnum2DArray,
+				org.apache.fory.serializer.UnknownClass.UnknownEnum3DArray, org.apache.fory.serializer.UnknownClass.UnknownEmptyStruct.class,
+				org.apache.fory.serializer.UnknownClass.UnknownEmptyStruct1DArray, org.apache.fory.serializer.UnknownClass.UnknownEmptyStruct2DArray,
+				org.apache.fory.serializer.UnknownClass.UnknownEmptyStruct3DArray, org.apache.fory.serializer.UnknownClass.UnknownStruct1DArray,
+				org.apache.fory.serializer.UnknownClass.UnknownStruct2DArray, org.apache.fory.serializer.UnknownClass.UnknownStruct3DArray };
+		for (final Class<?> placeholder : unknownPlaceholders) {
+			try {
+				fory.register(placeholder);
+			}
+			catch (final Throwable ignore) {
+				// Already registered (e.g. UnknownStruct on metaShare path) or not exposed by the
+				// installed Fory version — both are acceptable.
+			}
+		}
 		if (ArrayUtils.isNotEmpty(packagesNames)) {
 			final Map<Class<?>, String> modelClasses = new HashMap<>();
 			modelClasses
@@ -217,11 +238,17 @@ public class OptimizedSerializationHelper {
 			OptimizedSerializationHelper.LOGGER.info("Registering {} classes under shared type names and {} other classes in optimized serialization.",
 					canonicalClasses.size(), modelClasses.size() - canonicalClasses.size());
 			OptimizedSerializationHelper.LOGGER.debug("Canonical type names: {}", canonicalByTypeName);
+			final long enumCount = modelClasses.keySet().stream().filter(Class::isEnum).count();
+			OptimizedSerializationHelper.LOGGER.info("Optimized serializer scan picked up {} enum classes out of {} total scanned classes.",
+					enumCount, modelClasses.size());
+			modelClasses.keySet().stream().filter(Class::isEnum)
+					.forEach(enumClass -> OptimizedSerializationHelper.LOGGER.debug("Scanned enum: {}", enumClass.getName()));
 			modelClasses.keySet().forEach(clazz -> {
 				final String preferredName = canonicalClasses.contains(clazz) ? OptimizedSerializationHelper.resolveTypeName(clazz) : clazz.getName();
 				final String fallbackName = clazz.getName();
 				try {
 					fory.register(clazz, "", preferredName);
+					OptimizedSerializationHelper.LOGGER.debug("Registered {} under name '{}' (preferDto={}).", clazz.getName(), preferredName, preferDto);
 				}
 				catch (final IllegalArgumentException conflict) {
 					if (!fallbackName.equals(preferredName)) {

@@ -155,6 +155,34 @@ public class OptimizedSerializationHelper {
 			final Integer maxPoolSize,
 			final Language language,
 			final String... packagesNames) {
+		return OptimizedSerializationHelper.createSerializer(threadSafe, minPoolSize, maxPoolSize, language, false, packagesNames);
+	}
+
+	/**
+	 * Creates a serializer. When two classes share the same logical type name
+	 * (typically a Model and its generated DTO), {@code preferDto} controls
+	 * which one wins the canonical name slot. Set it to {@code true} to build
+	 * a producer-side serializer that writes Dto instances under the shared
+	 * name; set it to {@code false} (the default) to build a consumer-side
+	 * serializer that reads them back as Models.
+	 *
+	 * @param  threadSafe    Whether the serializer should be thread-safe.
+	 * @param  minPoolSize   Min pool size (thread-safe pool).
+	 * @param  maxPoolSize   Max pool size (thread-safe pool).
+	 * @param  language      Language.
+	 * @param  preferDto     If {@code true}, the Dto wins the canonical type
+	 *                           name when both Model and Dto are scanned;
+	 *                           otherwise the Model wins.
+	 * @param  packagesNames Packages to scan for registration.
+	 * @return               Serializer.
+	 */
+	public static final BaseFory createSerializer(
+			final Boolean threadSafe,
+			final Integer minPoolSize,
+			final Integer maxPoolSize,
+			final Language language,
+			final boolean preferDto,
+			final String... packagesNames) {
 		final ForyBuilder foryBuilder = Fory.builder().registerGuavaTypes(false).withLanguage(language).withCompatibleMode(CompatibleMode.COMPATIBLE);
 		foryBuilder.requireClassRegistration(ArrayUtils.isNotEmpty(packagesNames));
 		final BaseFory fory = (threadSafe ? ((maxPoolSize != null) ? foryBuilder.buildThreadSafeForyPool(maxPoolSize)
@@ -170,7 +198,17 @@ public class OptimizedSerializationHelper {
 				final String typeName = OptimizedSerializationHelper.resolveTypeName(clazz);
 				if (typeName != null) {
 					final Class<?> current = canonicalByTypeName.get(typeName);
-					if ((current == null) || (OptimizedSerializationHelper.isDtoClass(current) && !OptimizedSerializationHelper.isDtoClass(clazz))) {
+					final boolean replace;
+					if (current == null) {
+						replace = true;
+					}
+					else if (preferDto) {
+						replace = !OptimizedSerializationHelper.isDtoClass(current) && OptimizedSerializationHelper.isDtoClass(clazz);
+					}
+					else {
+						replace = OptimizedSerializationHelper.isDtoClass(current) && !OptimizedSerializationHelper.isDtoClass(clazz);
+					}
+					if (replace) {
 						canonicalByTypeName.put(typeName, clazz);
 					}
 				}

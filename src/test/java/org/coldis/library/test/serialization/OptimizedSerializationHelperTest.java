@@ -333,6 +333,66 @@ public class OptimizedSerializationHelperTest {
 	}
 
 	/**
+	 * {@link OptimizedSerializationHelper.RegistrationScope#ALL} registers both
+	 * the Model and the paired DTO; both should round-trip through the same
+	 * serializer.
+	 */
+	@Test
+	public void test10RegistrationScopeAllRegistersBoth() throws Exception {
+		final BaseFory fory = OptimizedSerializationHelper.createAllSerializer(false, null, null, Language.JAVA, "org.coldis.library.test.serialization");
+
+		final DtoTestObject model = new DtoTestObject();
+		model.setId(101L);
+		final DtoTestObject modelRoundTrip = (DtoTestObject) fory.deserialize(fory.serialize(model));
+		Assertions.assertEquals(101L, modelRoundTrip.getId());
+
+		final DtoTestObjectDto dto = new DtoTestObjectDto();
+		dto.setId(202L);
+		final DtoTestObjectDto dtoRoundTrip = (DtoTestObjectDto) fory.deserialize(fory.serialize(dto));
+		Assertions.assertEquals(202L, dtoRoundTrip.getId());
+	}
+
+	/**
+	 * {@link OptimizedSerializationHelper.RegistrationScope#MODELS} drops paired
+	 * DTOs from the registry: Models still round-trip, DTOs throw at serialize
+	 * time because {@code requireClassRegistration} blocks unregistered types.
+	 */
+	@Test
+	public void test11RegistrationScopeModelsExcludesDtos() throws Exception {
+		final BaseFory fory = OptimizedSerializationHelper.createModelSerializer(false, null, null, Language.JAVA, "org.coldis.library.test.serialization");
+
+		final DtoTestObject model = new DtoTestObject();
+		model.setId(11L);
+		final DtoTestObject modelRoundTrip = (DtoTestObject) fory.deserialize(fory.serialize(model));
+		Assertions.assertEquals(11L, modelRoundTrip.getId());
+
+		final DtoTestObjectDto dto = new DtoTestObjectDto();
+		dto.setId(22L);
+		Assertions.assertThrows(Exception.class, () -> fory.serialize(dto),
+				"paired DTO should not be registered under MODELS scope");
+	}
+
+	/**
+	 * {@link OptimizedSerializationHelper.RegistrationScope#DTOS} drops paired
+	 * Models from the registry: DTOs round-trip, Models throw at serialize
+	 * time.
+	 */
+	@Test
+	public void test12RegistrationScopeDtosExcludesModels() throws Exception {
+		final BaseFory fory = OptimizedSerializationHelper.createDtoSerializer(false, null, null, Language.JAVA, "org.coldis.library.test.serialization");
+
+		final DtoTestObjectDto dto = new DtoTestObjectDto();
+		dto.setId(33L);
+		final DtoTestObjectDto dtoRoundTrip = (DtoTestObjectDto) fory.deserialize(fory.serialize(dto));
+		Assertions.assertEquals(33L, dtoRoundTrip.getId());
+
+		final DtoTestObject model = new DtoTestObject();
+		model.setId(44L);
+		Assertions.assertThrows(Exception.class, () -> fory.serialize(model),
+				"paired Model should not be registered under DTOS scope");
+	}
+
+	/**
 	 * Two-instance pattern with a List of nested objects.
 	 */
 	@Test

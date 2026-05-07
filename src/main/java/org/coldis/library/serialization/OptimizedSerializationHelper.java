@@ -41,6 +41,39 @@ public class OptimizedSerializationHelper {
 	private static final Logger LOGGER = LoggerFactory.getLogger(OptimizedSerializationHelper.class);
 
 	/**
+	 * Default coldis package always added to the scan so hand-written DTO
+	 * parents (e.g. {@code org.coldis.library.model.AbstractTimestampable})
+	 * end up registered in Fory without callers having to remember to add
+	 * it to their {@code base-package}.
+	 */
+	private static final String COLDIS_MODEL_PACKAGE = "org.coldis.library.model";
+
+	/**
+	 * Selects which subset of scanned classes the optimized serializer should
+	 * register. Driven by the {@link org.coldis.library.dto.DtoType} mappings
+	 * walked at scan time — for paired (Model, DTO) classes:
+	 *
+	 * <ul>
+	 *   <li>{@link #ALL} — register both. Suitable for producer JVMs that need
+	 *       to emit either side, or for tests that want to exercise both
+	 *       directions of cross-class round-trips.</li>
+	 *   <li>{@link #MODELS} — register Models only; paired DTOs are skipped.
+	 *       Use on consumer JVMs that only ever read into Model types.</li>
+	 *   <li>{@link #DTOS} — register DTOs only; paired Models are skipped.
+	 *       Use on producer JVMs that only emit DTO instances (e.g. a service
+	 *       that ships only the {@code service-client} jar).</li>
+	 * </ul>
+	 *
+	 * <p>Classes that are not part of any (Model, DTO) pair are always
+	 * registered regardless of the scope.
+	 */
+	public enum RegistrationScope {
+		ALL,
+		MODELS,
+		DTOS;
+	}
+
+	/**
 	 * Annotation classes whose presence excludes a scanned class from
 	 * Fory registration. AspectJ is loaded softly so this module does
 	 * not need a compile-time dependency on aspectjrt.
@@ -144,10 +177,7 @@ public class OptimizedSerializationHelper {
 	}
 
 	/**
-	 * Creates a serializer.
-	 *
-	 * @param  language Language.
-	 * @return          Serializer.
+	 * Creates a serializer using {@link RegistrationScope#ALL}.
 	 */
 	public static final BaseFory createSerializer(
 			final Boolean threadSafe,
@@ -155,25 +185,85 @@ public class OptimizedSerializationHelper {
 			final Integer maxPoolSize,
 			final Language language,
 			final String... packagesNames) {
-		return OptimizedSerializationHelper.createSerializer(threadSafe, minPoolSize, maxPoolSize, language, false, packagesNames);
+		return OptimizedSerializationHelper.createSerializer(threadSafe, minPoolSize, maxPoolSize, language, RegistrationScope.ALL, packagesNames);
 	}
 
 	/**
-	 * Creates a serializer. When two classes share the same logical type name
-	 * (typically a Model and its generated DTO), {@code preferDto} controls
-	 * which one wins the canonical name slot. Set it to {@code true} to build
-	 * a producer-side serializer that writes Dto instances under the shared
-	 * name; set it to {@code false} (the default) to build a consumer-side
-	 * serializer that reads them back as Models.
+	 * Creates a serializer that registers every scanned class — both Models and
+	 * their DTO partners. Use for tests or producer JVMs that need to emit
+	 * either side of a (Model, DTO) pair.
+	 */
+	public static final BaseFory createAllSerializer(
+			final Boolean threadSafe,
+			final Integer minPoolSize,
+			final Integer maxPoolSize,
+			final Language language,
+			final String... packagesNames) {
+		return OptimizedSerializationHelper.createSerializer(threadSafe, minPoolSize, maxPoolSize, language, RegistrationScope.ALL, packagesNames);
+	}
+
+	/**
+	 * Creates a serializer that registers Models only — DTOs paired with a
+	 * Model (via {@link org.coldis.library.dto.DtoType}) are skipped.
+	 * Suitable for consumer JVMs that read messages straight into Model
+	 * types.
+	 */
+	public static final BaseFory createModelSerializer(
+			final Boolean threadSafe,
+			final Integer minPoolSize,
+			final Integer maxPoolSize,
+			final Language language,
+			final String... packagesNames) {
+		return OptimizedSerializationHelper.createSerializer(threadSafe, minPoolSize, maxPoolSize, language, RegistrationScope.MODELS, packagesNames);
+	}
+
+	/**
+	 * Creates a serializer that registers DTOs only — Models paired with a
+	 * DTO are skipped. Suitable for producer JVMs that emit DTO instances
+	 * (e.g. a service that ships only the {@code service-client} jar).
+	 */
+	public static final BaseFory createDtoSerializer(
+			final Boolean threadSafe,
+			final Integer minPoolSize,
+			final Integer maxPoolSize,
+			final Language language,
+			final String... packagesNames) {
+		return OptimizedSerializationHelper.createSerializer(threadSafe, minPoolSize, maxPoolSize, language, RegistrationScope.DTOS, packagesNames);
+	}
+
+	/**
+	 * @deprecated Use {@link #createSerializer(Boolean, Integer, Integer, Language, RegistrationScope, String...)}
+	 *             or one of the named factories ({@link #createAllSerializer},
+	 *             {@link #createModelSerializer}, {@link #createDtoSerializer}).
+	 *             {@code preferDto=true} maps to {@link RegistrationScope#DTOS};
+	 *             {@code preferDto=false} maps to {@link RegistrationScope#ALL}.
+	 */
+	@Deprecated
+	public static final BaseFory createSerializer(
+			final Boolean threadSafe,
+			final Integer minPoolSize,
+			final Integer maxPoolSize,
+			final Language language,
+			final boolean preferDto,
+			final String... packagesNames) {
+		return OptimizedSerializationHelper.createSerializer(threadSafe, minPoolSize, maxPoolSize, language,
+				preferDto ? RegistrationScope.DTOS : RegistrationScope.ALL, packagesNames);
+	}
+
+	/**
+	 * Creates a serializer. The {@link RegistrationScope} controls which
+	 * classes from the scan are registered when (Model, DTO) pairs are
+	 * detected via {@link org.coldis.library.dto.DtoType}.
 	 *
 	 * @param  threadSafe    Whether the serializer should be thread-safe.
 	 * @param  minPoolSize   Min pool size (thread-safe pool).
 	 * @param  maxPoolSize   Max pool size (thread-safe pool).
 	 * @param  language      Language.
-	 * @param  preferDto     If {@code true}, the Dto wins the canonical type
-	 *                           name when both Model and Dto are scanned;
-	 *                           otherwise the Model wins.
-	 * @param  packagesNames Packages to scan for registration.
+	 * @param  scope         Registration scope.
+	 * @param  packagesNames Packages to scan for registration. The
+	 *                           {@code org.coldis.library.model} package is
+	 *                           always added so hand-written shared parents
+	 *                           are reachable.
 	 * @return               Serializer.
 	 */
 	public static final BaseFory createSerializer(
@@ -181,7 +271,7 @@ public class OptimizedSerializationHelper {
 			final Integer minPoolSize,
 			final Integer maxPoolSize,
 			final Language language,
-			final boolean preferDto,
+			final RegistrationScope scope,
 			final String... packagesNames) {
 		final ForyBuilder foryBuilder = Fory.builder().registerGuavaTypes(false).withLanguage(language).withCompatibleMode(CompatibleMode.COMPATIBLE)
 				.withDeserializeUnknownClass(true);
@@ -209,46 +299,57 @@ public class OptimizedSerializationHelper {
 			}
 		}
 		if (ArrayUtils.isNotEmpty(packagesNames)) {
+			// Always include coldis core models so shared hand-written parents (e.g.
+			// AbstractTimestampable used as a declared DTO via @DtoType.dtoClass) are reachable.
+			final String[] effectivePackages = OptimizedSerializationHelper.withColdisModelPackage(packagesNames);
 			final Map<Class<?>, String> modelClasses = new HashMap<>();
 			modelClasses
 					.putAll(ObjectMapperHelper.getModelClasses(
 							new OptimizedSerializationHelper.NoAnnotationTypeFilter(OptimizedSerializationHelper.EXCLUDED_ANNOTATIONS, true, false),
-							packagesNames));
+							effectivePackages));
+			// Build the (Model -> DTO) map by walking @DtoType on Models. Driven by the Model
+			// side so we don't depend on @DtoOrigin on the DTO; works for hand-written DTOs too.
+			final Map<Class<?>, Class<?>> modelToDto = OptimizedSerializationHelper.buildModelToDtoMap(modelClasses.keySet());
+			final Set<Class<?>> pairedDtos = new HashSet<>(modelToDto.values());
+			final Set<Class<?>> classesToRegister = new HashSet<>();
+			for (final Class<?> clazz : modelClasses.keySet()) {
+				final boolean keep = switch (scope) {
+					case ALL -> true;
+					case MODELS -> !pairedDtos.contains(clazz);
+					case DTOS -> !modelToDto.containsKey(clazz);
+				};
+				if (keep) {
+					classesToRegister.add(clazz);
+				}
+			}
+			// Pick the canonical class per shared logical typeName. With ALL we prefer the Model
+			// (so the DTO falls back to its FQN); MODELS / DTOS already filtered out the
+			// non-preferred side, so whatever survives wins automatically.
 			final Map<String, Class<?>> canonicalByTypeName = new HashMap<>();
-			modelClasses.keySet().forEach(clazz -> {
+			for (final Class<?> clazz : classesToRegister) {
 				final String typeName = OptimizedSerializationHelper.resolveTypeName(clazz);
 				if (typeName != null) {
 					final Class<?> current = canonicalByTypeName.get(typeName);
-					final boolean replace;
-					if (current == null) {
-						replace = true;
-					}
-					else if (preferDto) {
-						replace = !OptimizedSerializationHelper.isDtoClass(current) && OptimizedSerializationHelper.isDtoClass(clazz);
-					}
-					else {
-						replace = OptimizedSerializationHelper.isDtoClass(current) && !OptimizedSerializationHelper.isDtoClass(clazz);
-					}
+					final boolean replace = (current == null)
+							|| ((scope == RegistrationScope.ALL) && pairedDtos.contains(current) && !pairedDtos.contains(clazz));
 					if (replace) {
 						canonicalByTypeName.put(typeName, clazz);
 					}
 				}
-			});
+			}
 			final Set<Class<?>> canonicalClasses = new HashSet<>(canonicalByTypeName.values());
-			OptimizedSerializationHelper.LOGGER.info("Registering {} classes under shared type names and {} other classes in optimized serialization.",
-					canonicalClasses.size(), modelClasses.size() - canonicalClasses.size());
+			OptimizedSerializationHelper.LOGGER.info(
+					"Optimized serializer scope={} pairs={} scanned={} registering={} (canonical-typeName={}).", scope, modelToDto.size(),
+					modelClasses.size(), classesToRegister.size(), canonicalClasses.size());
 			OptimizedSerializationHelper.LOGGER.debug("Canonical type names: {}", canonicalByTypeName);
-			final long enumCount = modelClasses.keySet().stream().filter(Class::isEnum).count();
-			OptimizedSerializationHelper.LOGGER.info("Optimized serializer scan picked up {} enum classes out of {} total scanned classes.",
-					enumCount, modelClasses.size());
-			modelClasses.keySet().stream().filter(Class::isEnum)
-					.forEach(enumClass -> OptimizedSerializationHelper.LOGGER.debug("Scanned enum: {}", enumClass.getName()));
-			modelClasses.keySet().forEach(clazz -> {
+			final long enumCount = classesToRegister.stream().filter(Class::isEnum).count();
+			OptimizedSerializationHelper.LOGGER.debug("Registering {} enum classes.", enumCount);
+			classesToRegister.forEach(clazz -> {
 				final String preferredName = canonicalClasses.contains(clazz) ? OptimizedSerializationHelper.resolveTypeName(clazz) : clazz.getName();
 				final String fallbackName = clazz.getName();
 				try {
 					fory.register(clazz, "", preferredName);
-					OptimizedSerializationHelper.LOGGER.debug("Registered {} under name '{}' (preferDto={}).", clazz.getName(), preferredName, preferDto);
+					OptimizedSerializationHelper.LOGGER.debug("Registered {} under name '{}' (scope={}).", clazz.getName(), preferredName, scope);
 				}
 				catch (final IllegalArgumentException conflict) {
 					if (!fallbackName.equals(preferredName)) {
@@ -270,6 +371,100 @@ public class OptimizedSerializationHelper {
 			});
 		}
 		return fory;
+	}
+
+	/**
+	 * Adds the coldis core model package to the user-supplied scan list when not
+	 * already present.
+	 */
+	private static String[] withColdisModelPackage(
+			final String[] packagesNames) {
+		for (final String pkg : packagesNames) {
+			if (OptimizedSerializationHelper.COLDIS_MODEL_PACKAGE.equals(pkg) || OptimizedSerializationHelper.COLDIS_MODEL_PACKAGE.startsWith(pkg + ".")
+					|| (pkg != null && pkg.startsWith(OptimizedSerializationHelper.COLDIS_MODEL_PACKAGE + "."))) {
+				return packagesNames;
+			}
+		}
+		final String[] expanded = Arrays.copyOf(packagesNames, packagesNames.length + 1);
+		expanded[packagesNames.length] = OptimizedSerializationHelper.COLDIS_MODEL_PACKAGE;
+		return expanded;
+	}
+
+	/**
+	 * Walks every scanned class for {@link org.coldis.library.dto.DtoType},
+	 * resolves the DTO class it points at (via {@code dtoClass},
+	 * {@code dtoClassName}, or the conventional {@code namespace+name}), and
+	 * builds a {@code Model -> DTO} map. DTO classes that fail to load are
+	 * skipped silently — the DTO project may not be on the classpath.
+	 */
+	private static Map<Class<?>, Class<?>> buildModelToDtoMap(
+			final Set<Class<?>> scanned) {
+		final Map<Class<?>, Class<?>> mapping = new HashMap<>();
+		for (final Class<?> clazz : scanned) {
+			final Annotation dtoTypeAnno = OptimizedSerializationHelper.findDtoTypeAnnotation(clazz);
+			if (dtoTypeAnno == null) {
+				continue;
+			}
+			final String dtoFqn = OptimizedSerializationHelper.resolveDtoQualifiedName(clazz, dtoTypeAnno);
+			if (dtoFqn == null) {
+				continue;
+			}
+			try {
+				final Class<?> dtoClass = Class.forName(dtoFqn, false, clazz.getClassLoader());
+				mapping.put(clazz, dtoClass);
+			}
+			catch (final ClassNotFoundException notLoaded) {
+				OptimizedSerializationHelper.LOGGER.debug("DTO class {} declared by {} not on classpath; skipping pair.", dtoFqn, clazz.getName());
+			}
+		}
+		return mapping;
+	}
+
+	/**
+	 * Returns the {@code @DtoType} (or {@code @DtoTypes}-contained) annotation
+	 * on the given class via reflection — the dto module is an optional
+	 * dependency at runtime so we look up by name instead of taking a hard
+	 * dependency.
+	 */
+	private static Annotation findDtoTypeAnnotation(
+			final Class<?> clazz) {
+		for (final Annotation annotation : clazz.getAnnotations()) {
+			if ("org.coldis.library.dto.DtoType".equals(annotation.annotationType().getName())) {
+				return annotation;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Resolves the DTO class FQN for a Model annotated with {@code @DtoType}:
+	 * uses {@code dtoClass} when set (and not the {@code void.class} sentinel);
+	 * falls back to {@code dtoClassName}; finally derives from
+	 * {@code namespace + "." + name} (with the conventional {@code Dto}
+	 * suffix when {@code name} is blank).
+	 */
+	private static String resolveDtoQualifiedName(
+			final Class<?> modelClass,
+			final Annotation dtoTypeAnno) {
+		try {
+			final Class<? extends Annotation> annoType = dtoTypeAnno.annotationType();
+			final Class<?> declaredDtoClass = (Class<?>) annoType.getMethod("dtoClass").invoke(dtoTypeAnno);
+			if ((declaredDtoClass != null) && (declaredDtoClass != void.class)) {
+				return declaredDtoClass.getName();
+			}
+			final String declaredDtoClassName = (String) annoType.getMethod("dtoClassName").invoke(dtoTypeAnno);
+			if ((declaredDtoClassName != null) && !declaredDtoClassName.isBlank()) {
+				return declaredDtoClassName;
+			}
+			final String namespace = (String) annoType.getMethod("namespace").invoke(dtoTypeAnno);
+			final String name = (String) annoType.getMethod("name").invoke(dtoTypeAnno);
+			final String resolvedName = ((name == null) || name.isBlank()) ? (modelClass.getSimpleName() + "Dto") : name;
+			return ((namespace == null) || namespace.isBlank()) ? null : (namespace + "." + resolvedName);
+		}
+		catch (final Throwable error) {
+			OptimizedSerializationHelper.LOGGER.debug("Could not resolve DTO FQN for {}: {}", modelClass.getName(), error.getMessage());
+			return null;
+		}
 	}
 
 	/**
@@ -301,16 +496,6 @@ public class OptimizedSerializationHelper {
 			// Falls back to no shared name; class is registered with default identifier.
 		}
 		return typeName;
-	}
-
-	/**
-	 * Detects DTO classes by the presence of org.coldis.library.dto.DtoOrigin
-	 * without taking a compile-time dependency on the dto module.
-	 */
-	private static boolean isDtoClass(
-			final Class<?> clazz) {
-		return Arrays.stream(clazz.getAnnotations())
-				.anyMatch(annotation -> "org.coldis.library.dto.DtoOrigin".equals(annotation.annotationType().getName()));
 	}
 
 }

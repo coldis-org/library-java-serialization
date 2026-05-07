@@ -316,15 +316,17 @@ public class OptimizedSerializationHelper {
 			// Spring's ClassPathScanningCandidateComponentProvider skips abstract classes, so the
 			// initial scan misses Model/DTO parents like {@code AbstractLog} and any shared
 			// hand-written abstract DTO. Walk each scanned concrete class's superclass chain and
-			// add abstract parents that live in one of the configured scan packages, so they are
-			// available both for {@link DtoType} pairing and for Fory registration (the cross-class
-			// wire needs every layer's class registered under a name shared by both peers).
+			// add abstract parents that live in one of the configured scan packages OR anywhere
+			// under the coldis library namespace (covers persistence/model bases like
+			// {@code AbstractTimestampableEntity} that aren't in the user scan but are still
+			// declaring classes for fields on the wire).
 			final Set<Class<?>> abstractParents = new HashSet<>();
 			for (final Class<?> scanned : modelClasses.keySet()) {
 				Class<?> parent = scanned.getSuperclass();
 				while ((parent != null) && (parent != Object.class)) {
 					if (!modelClasses.containsKey(parent) && !abstractParents.contains(parent)
-							&& OptimizedSerializationHelper.isInScanPackages(parent, effectivePackages)) {
+							&& (OptimizedSerializationHelper.isInScanPackages(parent, effectivePackages)
+									|| parent.getPackageName().startsWith("org.coldis.library."))) {
 						abstractParents.add(parent);
 					}
 					parent = parent.getSuperclass();

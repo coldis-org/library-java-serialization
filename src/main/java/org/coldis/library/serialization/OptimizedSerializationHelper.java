@@ -313,6 +313,26 @@ public class OptimizedSerializationHelper {
 					.putAll(ObjectMapperHelper.getModelClasses(
 							new OptimizedSerializationHelper.NoAnnotationTypeFilter(OptimizedSerializationHelper.EXCLUDED_ANNOTATIONS, true, false),
 							effectivePackages));
+			// Spring's ClassPathScanningCandidateComponentProvider skips abstract classes, so the
+			// initial scan misses Model/DTO parents like {@code AbstractLog} and any shared
+			// hand-written abstract DTO. Walk each scanned concrete class's superclass chain and
+			// add abstract parents that live in one of the configured scan packages, so they are
+			// available both for {@link DtoType} pairing and for Fory registration (the cross-class
+			// wire needs every layer's class registered under a name shared by both peers).
+			final Set<Class<?>> abstractParents = new HashSet<>();
+			for (final Class<?> scanned : modelClasses.keySet()) {
+				Class<?> parent = scanned.getSuperclass();
+				while ((parent != null) && (parent != Object.class)) {
+					if (!modelClasses.containsKey(parent) && !abstractParents.contains(parent)
+							&& OptimizedSerializationHelper.isInScanPackages(parent, effectivePackages)) {
+						abstractParents.add(parent);
+					}
+					parent = parent.getSuperclass();
+				}
+			}
+			for (final Class<?> parent : abstractParents) {
+				modelClasses.put(parent, parent.getName());
+			}
 			// Build the (Model -> DTO) map by walking @DtoType on Models. Driven by the Model
 			// side so we don't depend on @DtoOrigin on the DTO; works for hand-written DTOs too.
 			final Map<Class<?>, Class<?>> modelToDto = OptimizedSerializationHelper.buildModelToDtoMap(modelClasses.keySet());
@@ -331,27 +351,51 @@ public class OptimizedSerializationHelper {
 			// Naming policy:
 			//   ALL  — every class registered under its FQN (predictable, no shared-typeName
 			//          collisions; intended for in-process use such as cloning).
-			//   MODELS / DTOS — surviving class registers under its shared logical typeName when
-			//          available (so a peer with the opposite scope reads it back as the local
-			//          equivalent); falls back to FQN otherwise.
-			final Map<String, Class<?>> canonicalByTypeName = new HashMap<>();
-			if (scope != RegistrationScope.ALL) {
-				for (final Class<?> clazz : classesToRegister) {
-					final String typeName = OptimizedSerializationHelper.resolveTypeName(clazz);
-					if (typeName != null) {
-						canonicalByTypeName.putIfAbsent(typeName, clazz);
+			//   MODELS / DTOS — paired (Model, DTO) classes register under a shared canonical
+			//          name on both peers so Fory's per-class-layer ClassDef rewrite resolves the
+			//          incoming layer to the local class. Canonical name is the Model's
+			//          {@link Typable#getTypeName()} when present, otherwise the Model FQN. This
+			//          extends the leaf-level Typable trick to abstract intermediates so
+			//          inherited fields populate across the cross-class wire (Fory keys field
+			//          descriptor lookups by declaringClassFQN.fieldName, and the receiver
+			//          rewrites the wire's registered class name to the local class's FQN — so
+			//          both peers must register their respective parent under the same name).
+			//          Unpaired classes register under their own typeName when available, else
+			//          FQN.
+			final Map<Class<?>, Class<?>> dtoToModel = new HashMap<>();
+			for (final Map.Entry<Class<?>, Class<?>> entry : modelToDto.entrySet()) {
+				dtoToModel.put(entry.getValue(), entry.getKey());
+			}
+			final Map<Class<?>, String> preferredNames = new HashMap<>();
+			final Map<String, Class<?>> nameOwners = new HashMap<>();
+			for (final Class<?> clazz : classesToRegister) {
+				String preferred;
+				if (scope == RegistrationScope.ALL) {
+					preferred = clazz.getName();
+				}
+				else {
+					final Class<?> pairedModel = dtoToModel.get(clazz);
+					if (pairedModel != null) {
+						final String modelTypeName = OptimizedSerializationHelper.resolveTypeName(pairedModel);
+						preferred = (modelTypeName != null) ? modelTypeName : pairedModel.getName();
+					}
+					else {
+						final String typeName = OptimizedSerializationHelper.resolveTypeName(clazz);
+						preferred = (typeName != null) ? typeName : clazz.getName();
 					}
 				}
+				if (nameOwners.putIfAbsent(preferred, clazz) != null) {
+					preferred = clazz.getName();
+				}
+				preferredNames.put(clazz, preferred);
 			}
-			final Set<Class<?>> canonicalClasses = new HashSet<>(canonicalByTypeName.values());
-			OptimizedSerializationHelper.LOGGER.info(
-					"Optimized serializer scope={} pairs={} scanned={} registering={} (canonical-typeName={}).", scope, modelToDto.size(),
-					modelClasses.size(), classesToRegister.size(), canonicalClasses.size());
-			OptimizedSerializationHelper.LOGGER.debug("Canonical type names: {}", canonicalByTypeName);
+			OptimizedSerializationHelper.LOGGER.info("Optimized serializer scope={} pairs={} scanned={} registering={}.", scope, modelToDto.size(),
+					modelClasses.size(), classesToRegister.size());
+			OptimizedSerializationHelper.LOGGER.debug("Preferred registration names: {}", preferredNames);
 			final long enumCount = classesToRegister.stream().filter(Class::isEnum).count();
 			OptimizedSerializationHelper.LOGGER.debug("Registering {} enum classes.", enumCount);
 			classesToRegister.forEach(clazz -> {
-				final String preferredName = canonicalClasses.contains(clazz) ? OptimizedSerializationHelper.resolveTypeName(clazz) : clazz.getName();
+				final String preferredName = preferredNames.get(clazz);
 				final String fallbackName = clazz.getName();
 				try {
 					fory.register(clazz, "", preferredName);
@@ -377,6 +421,23 @@ public class OptimizedSerializationHelper {
 			});
 		}
 		return fory;
+	}
+
+	/**
+	 * Whether the given class lives in (or under) any of the configured scan
+	 * packages. Used to keep the abstract-parent walk scoped to the user's
+	 * declared scan surface plus coldis core models.
+	 */
+	private static boolean isInScanPackages(
+			final Class<?> clazz,
+			final String[] packages) {
+		final String pkg = clazz.getPackageName();
+		for (final String scanPackage : packages) {
+			if ((scanPackage != null) && (pkg.equals(scanPackage) || pkg.startsWith(scanPackage + "."))) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -422,8 +483,19 @@ public class OptimizedSerializationHelper {
 			dtoFqnResolved++;
 			try {
 				final Class<?> dtoClass = Class.forName(dtoFqn, false, clazz.getClassLoader());
-				mapping.put(clazz, dtoClass);
-				OptimizedSerializationHelper.LOGGER.debug("Paired {} with DTO {}.", clazz.getName(), dtoFqn);
+				// Skip "self-DTO via parent" pairs: when the declared DTO is a shared library
+				// parent of the Model (e.g. {@code HierarchyTimestampedEntity} declaring
+				// {@link org.coldis.library.model.AbstractTimestampable} as its DTO), the DTO
+				// class lives on BOTH sides of the wire as the Model's transitive parent. It
+				// must register under its own FQN on every peer so its layer matches by name; a
+				// canonical-rename on either side desyncs the parent chain.
+				if (dtoClass.isAssignableFrom(clazz)) {
+					OptimizedSerializationHelper.LOGGER.debug("Skipping self-parent DTO pair {} -> {} (DTO is a parent of Model).", clazz.getName(), dtoFqn);
+				}
+				else {
+					mapping.put(clazz, dtoClass);
+					OptimizedSerializationHelper.LOGGER.debug("Paired {} with DTO {}.", clazz.getName(), dtoFqn);
+				}
 			}
 			catch (final ClassNotFoundException notLoaded) {
 				OptimizedSerializationHelper.LOGGER.debug("DTO class {} declared by {} not on classpath; skipping pair.", dtoFqn, clazz.getName());

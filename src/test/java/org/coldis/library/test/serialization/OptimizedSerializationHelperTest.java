@@ -11,6 +11,9 @@ import org.coldis.library.serialization.OptimizedSerializationHelper;
 import org.coldis.library.test.serialization.conflict.SharedNameAlias;
 import org.coldis.library.test.serialization.conflict.SharedNameOwner;
 import org.coldis.library.test.serialization.crossproc.dto.CrossModelDto;
+import org.coldis.library.test.serialization.crossproc.hierarchy.dto.HierarchyBusinessLogDto;
+import org.coldis.library.test.serialization.crossproc.hierarchy.model.HierarchyBusinessLog;
+import org.coldis.library.test.serialization.crossproc.hierarchy.model.HierarchyLogType;
 import org.coldis.library.test.serialization.crossproc.model.CrossModel;
 import org.coldis.library.test.serialization.dto.DtoTestObject2Dto;
 import org.coldis.library.test.serialization.dto.DtoTestObjectDto;
@@ -387,6 +390,79 @@ public class OptimizedSerializationHelperTest {
 		model.setId(44L);
 		Assertions.assertThrows(Exception.class, () -> fory.serialize(model),
 				"paired Model should not be registered under DTOS scope");
+	}
+
+	/**
+	 * BusinessLog-mirror cross-class round-trip. The Model and the generated DTO
+	 * sit in the same scan package; producer uses {@link OptimizedSerializationHelper.RegistrationScope#DTOS}
+	 * (only DTO sides registered) and consumer uses {@link OptimizedSerializationHelper.RegistrationScope#MODELS}
+	 * (only Model sides registered). Both peers register the concrete pair under
+	 * the same logical type name (declared via {@link org.coldis.library.model.Typable})
+	 * so producer-side DTO bytes resolve into a Model instance on the consumer.
+	 *
+	 * <p>This is the exercise that surfaced the {@code UnknownClass$UnknownEnum
+	 * is not registered} failure in service-log: the hierarchy includes an enum
+	 * field, which Fory's MetaShared field-level encoding routes through
+	 * placeholder {@code UnknownClass.*} types when the receiver lacks the
+	 * field's declared class.
+	 */
+	/**
+	 * Minimal direct-Fory probe: register the abstract Model parent FQN as the
+	 * shared name on both peers (producer registers DTO under that FQN; consumer
+	 * registers Model under that FQN). If this passes, cross-class for inherited
+	 * fields works given symmetric registrations and the helper just needs to be
+	 * fixed; if it fails, Fory itself rejects this pattern.
+	 */
+	@Test
+	public void test14HierarchyCrossClassDirect() throws Exception {
+		final org.apache.fory.Fory producer = org.apache.fory.Fory.builder().registerGuavaTypes(false).withLanguage(Language.JAVA)
+				.withCompatibleMode(CompatibleMode.COMPATIBLE).requireClassRegistration(true).withDeserializeUnknownClass(true).build();
+		final org.apache.fory.Fory consumer = org.apache.fory.Fory.builder().registerGuavaTypes(false).withLanguage(Language.JAVA)
+				.withCompatibleMode(CompatibleMode.COMPATIBLE).requireClassRegistration(true).withDeserializeUnknownClass(true).build();
+
+		final String parentFqn = org.coldis.library.test.serialization.crossproc.hierarchy.model.HierarchyAbstractLog.class.getName();
+		final String leafName = "coldis.test.hierarchy.BusinessLog";
+
+		producer.register(org.coldis.library.test.serialization.crossproc.hierarchy.dto.HierarchyAbstractLogDto.class, "", parentFqn);
+		producer.register(org.coldis.library.test.serialization.crossproc.hierarchy.dto.HierarchyBusinessLogDto.class, "coldis.test.hierarchy", "BusinessLog");
+		producer.register(org.coldis.library.test.serialization.crossproc.hierarchy.model.HierarchyLogType.class);
+		producer.register(org.coldis.library.model.AbstractTimestampable.class);
+
+		consumer.register(org.coldis.library.test.serialization.crossproc.hierarchy.model.HierarchyAbstractLog.class, "", parentFqn);
+		consumer.register(org.coldis.library.test.serialization.crossproc.hierarchy.model.HierarchyBusinessLog.class, "coldis.test.hierarchy", "BusinessLog");
+		consumer.register(org.coldis.library.test.serialization.crossproc.hierarchy.model.HierarchyLogType.class);
+		consumer.register(org.coldis.library.model.AbstractTimestampable.class);
+
+		final HierarchyBusinessLogDto dto = new HierarchyBusinessLogDto();
+		dto.setId(42L);
+		dto.setMessage("hello");
+		dto.setType(HierarchyLogType.CREATED);
+		dto.setBusinessKey("key-1");
+
+		final HierarchyBusinessLog model = (HierarchyBusinessLog) consumer.deserialize(producer.serialize(dto));
+		Assertions.assertEquals(42L, model.getId());
+		Assertions.assertEquals("hello", model.getMessage());
+		Assertions.assertEquals(HierarchyLogType.CREATED, model.getType());
+		Assertions.assertEquals("key-1", model.getBusinessKey());
+	}
+
+	@Test
+	public void test13HierarchyCrossClass() throws Exception {
+		final String pkg = "org.coldis.library.test.serialization.crossproc.hierarchy";
+		final BaseFory producer = OptimizedSerializationHelper.createDtoSerializer(false, null, null, Language.JAVA, pkg);
+		final BaseFory consumer = OptimizedSerializationHelper.createModelSerializer(false, null, null, Language.JAVA, pkg);
+
+		final HierarchyBusinessLogDto dto = new HierarchyBusinessLogDto();
+		dto.setId(42L);
+		dto.setMessage("hello");
+		dto.setType(HierarchyLogType.CREATED);
+		dto.setBusinessKey("key-1");
+
+		final HierarchyBusinessLog model = (HierarchyBusinessLog) consumer.deserialize(producer.serialize(dto));
+		Assertions.assertEquals(42L, model.getId());
+		Assertions.assertEquals("hello", model.getMessage());
+		Assertions.assertEquals(HierarchyLogType.CREATED, model.getType());
+		Assertions.assertEquals("key-1", model.getBusinessKey());
 	}
 
 	/**

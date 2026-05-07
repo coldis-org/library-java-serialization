@@ -43,12 +43,10 @@ public class OptimizedSerializationHelperTest {
 	private static Fory serializer2;
 
 	static {
-		OptimizedSerializationHelperTest.serializer1 = (Fory) OptimizedSerializationHelper.createSerializer(false, null, null, Language.JAVA,
-		"org.coldis.library.test.serialization");
-//		OptimizedSerializationHelperTest.serializer1 = (Fory) OptimizedSerializationHelper.createSerializer(false, null, null, Language.XLANG,
-//		"org.coldis.library.test.serializationX");
-//		OptimizedSerializationHelperTest.serializer1.register(DtoTestObjectDto.class, DtoTestObject.class.getName());
-//		OptimizedSerializationHelperTest.serializer1.register(DtoTestObject2Dto.class, DtoTestObject2.class.getName());
+		// serializer1 round-trips both Models and DTOs in the same instance — uses ALL scope so
+		// every scanned class is registered (under FQN, not shared typeName).
+		OptimizedSerializationHelperTest.serializer1 = (Fory) OptimizedSerializationHelper.createAllSerializer(false, null, null, Language.JAVA,
+				"org.coldis.library.test.serialization");
 		OptimizedSerializationHelperTest.serializer2 = (Fory) OptimizedSerializationHelper.createSerializer(false, null, null, Language.XLANG,
 				"org.coldis.library.test.serializationX");
 		OptimizedSerializationHelperTest.serializer2.register(DtoTestObject.class, DtoTestObject.class.getName());
@@ -248,13 +246,12 @@ public class OptimizedSerializationHelperTest {
 	}
 
 	/**
-	 * Helper-built Fory round-trips both Model (canonical, registered under
-	 * typeName) and DTO (registered under FQN as fallback) on the same
-	 * instance.
+	 * Helper-built Fory round-trips both Model and DTO on the same instance
+	 * — uses ALL scope so every scanned class is registered under FQN.
 	 */
 	@Test
 	public void test06HelperCanonicalRoundTrips() throws Exception {
-		final BaseFory fory = OptimizedSerializationHelper.createSerializer(false, null, null, Language.JAVA, "org.coldis.library.test.serialization");
+		final BaseFory fory = OptimizedSerializationHelper.createAllSerializer(false, null, null, Language.JAVA, "org.coldis.library.test.serialization");
 
 		final DtoTestObject model = new DtoTestObject();
 		model.setId(42L);

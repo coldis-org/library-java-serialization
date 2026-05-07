@@ -177,15 +177,21 @@ public class OptimizedSerializationHelper {
 	}
 
 	/**
-	 * Creates a serializer using {@link RegistrationScope#ALL}.
+	 * @deprecated The no-scope overload defaults to {@link RegistrationScope#MODELS}
+	 *             (preserving the historical Model-canonical typeName behavior).
+	 *             Pick a scope explicitly via the named factories
+	 *             ({@link #createAllSerializer}, {@link #createModelSerializer},
+	 *             {@link #createDtoSerializer}) or the
+	 *             {@link RegistrationScope}-aware overload.
 	 */
+	@Deprecated
 	public static final BaseFory createSerializer(
 			final Boolean threadSafe,
 			final Integer minPoolSize,
 			final Integer maxPoolSize,
 			final Language language,
 			final String... packagesNames) {
-		return OptimizedSerializationHelper.createSerializer(threadSafe, minPoolSize, maxPoolSize, language, RegistrationScope.ALL, packagesNames);
+		return OptimizedSerializationHelper.createSerializer(threadSafe, minPoolSize, maxPoolSize, language, RegistrationScope.MODELS, packagesNames);
 	}
 
 	/**
@@ -236,7 +242,7 @@ public class OptimizedSerializationHelper {
 	 *             or one of the named factories ({@link #createAllSerializer},
 	 *             {@link #createModelSerializer}, {@link #createDtoSerializer}).
 	 *             {@code preferDto=true} maps to {@link RegistrationScope#DTOS};
-	 *             {@code preferDto=false} maps to {@link RegistrationScope#ALL}.
+	 *             {@code preferDto=false} maps to {@link RegistrationScope#MODELS}.
 	 */
 	@Deprecated
 	public static final BaseFory createSerializer(
@@ -247,7 +253,7 @@ public class OptimizedSerializationHelper {
 			final boolean preferDto,
 			final String... packagesNames) {
 		return OptimizedSerializationHelper.createSerializer(threadSafe, minPoolSize, maxPoolSize, language,
-				preferDto ? RegistrationScope.DTOS : RegistrationScope.ALL, packagesNames);
+				preferDto ? RegistrationScope.DTOS : RegistrationScope.MODELS, packagesNames);
 	}
 
 	/**
@@ -322,18 +328,18 @@ public class OptimizedSerializationHelper {
 					classesToRegister.add(clazz);
 				}
 			}
-			// Pick the canonical class per shared logical typeName. With ALL we prefer the Model
-			// (so the DTO falls back to its FQN); MODELS / DTOS already filtered out the
-			// non-preferred side, so whatever survives wins automatically.
+			// Naming policy:
+			//   ALL  — every class registered under its FQN (predictable, no shared-typeName
+			//          collisions; intended for in-process use such as cloning).
+			//   MODELS / DTOS — surviving class registers under its shared logical typeName when
+			//          available (so a peer with the opposite scope reads it back as the local
+			//          equivalent); falls back to FQN otherwise.
 			final Map<String, Class<?>> canonicalByTypeName = new HashMap<>();
-			for (final Class<?> clazz : classesToRegister) {
-				final String typeName = OptimizedSerializationHelper.resolveTypeName(clazz);
-				if (typeName != null) {
-					final Class<?> current = canonicalByTypeName.get(typeName);
-					final boolean replace = (current == null)
-							|| ((scope == RegistrationScope.ALL) && pairedDtos.contains(current) && !pairedDtos.contains(clazz));
-					if (replace) {
-						canonicalByTypeName.put(typeName, clazz);
+			if (scope != RegistrationScope.ALL) {
+				for (final Class<?> clazz : classesToRegister) {
+					final String typeName = OptimizedSerializationHelper.resolveTypeName(clazz);
+					if (typeName != null) {
+						canonicalByTypeName.putIfAbsent(typeName, clazz);
 					}
 				}
 			}

@@ -406,23 +406,31 @@ public class OptimizedSerializationHelper {
 	private static Map<Class<?>, Class<?>> buildModelToDtoMap(
 			final Set<Class<?>> scanned) {
 		final Map<Class<?>, Class<?>> mapping = new HashMap<>();
+		int dtoTypeAnnotated = 0;
+		int dtoFqnResolved = 0;
 		for (final Class<?> clazz : scanned) {
 			final Annotation dtoTypeAnno = OptimizedSerializationHelper.findDtoTypeAnnotation(clazz);
 			if (dtoTypeAnno == null) {
 				continue;
 			}
+			dtoTypeAnnotated++;
 			final String dtoFqn = OptimizedSerializationHelper.resolveDtoQualifiedName(clazz, dtoTypeAnno);
 			if (dtoFqn == null) {
+				OptimizedSerializationHelper.LOGGER.debug("@DtoType on {} did not resolve to a DTO FQN.", clazz.getName());
 				continue;
 			}
+			dtoFqnResolved++;
 			try {
 				final Class<?> dtoClass = Class.forName(dtoFqn, false, clazz.getClassLoader());
 				mapping.put(clazz, dtoClass);
+				OptimizedSerializationHelper.LOGGER.debug("Paired {} with DTO {}.", clazz.getName(), dtoFqn);
 			}
 			catch (final ClassNotFoundException notLoaded) {
 				OptimizedSerializationHelper.LOGGER.debug("DTO class {} declared by {} not on classpath; skipping pair.", dtoFqn, clazz.getName());
 			}
 		}
+		OptimizedSerializationHelper.LOGGER.debug("Pair scan: scanned={} dtoTypeAnnotated={} dtoFqnResolved={} paired={}.",
+				scanned.size(), dtoTypeAnnotated, dtoFqnResolved, mapping.size());
 		return mapping;
 	}
 

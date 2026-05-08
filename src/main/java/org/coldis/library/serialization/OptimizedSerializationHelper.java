@@ -281,8 +281,13 @@ public class OptimizedSerializationHelper {
 			final Language language,
 			final RegistrationScope scope,
 			final String... packagesNames) {
+		// Enable reference tracking so shared sub-objects and cyclic graphs (common in Hibernate-
+		// managed entity hierarchies) serialize and round-trip correctly. Without this, the second
+		// visit to the same object — or a true cycle — throws during serialization, which on the
+		// JMS path is silently caught by EnhancedJmsMessageConverter#toSerializedMessage and
+		// downgrades the wire format to JSON.
 		final ForyBuilder foryBuilder = Fory.builder().registerGuavaTypes(false).withLanguage(language).withCompatibleMode(CompatibleMode.COMPATIBLE)
-				.withDeserializeUnknownClass(true);
+				.withDeserializeUnknownClass(true).withRefTracking(true);
 		foryBuilder.requireClassRegistration(ArrayUtils.isNotEmpty(packagesNames));
 		final BaseFory fory = (threadSafe ? ((maxPoolSize != null) ? foryBuilder.buildThreadSafeForyPool(maxPoolSize)
 				: foryBuilder.buildThreadSafeFory()) : foryBuilder.build());

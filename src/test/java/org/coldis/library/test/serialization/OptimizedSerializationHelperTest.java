@@ -466,6 +466,46 @@ public class OptimizedSerializationHelperTest {
 	}
 
 	/**
+	 * Helper-built Fory must enable reference tracking so shared sub-objects (and
+	 * cyclic graphs, common in Hibernate-managed entity hierarchies) round-trip
+	 * correctly. Without {@code withRefTracking(true)}, the second visit to the
+	 * same instance throws during serialize — and on the JMS path that exception
+	 * is silently swallowed by {@code EnhancedJmsMessageConverter#toSerializedMessage},
+	 * downgrading the wire format from Fory to JSON for any payload with shared
+	 * sub-objects. This test pins the helper's contract so that downgrade can't
+	 * regress unnoticed.
+	 */
+	@Test
+	public void test13RefTrackingHandlesSharedReferences() throws Exception {
+		final BaseFory fory = OptimizedSerializationHelper.createAllSerializer(false, null, null, Language.JAVA, "org.coldis.library.test.serialization");
+
+		final DtoTestObject2 shared = new DtoTestObject2();
+		shared.setId(99L);
+		shared.setTest("shared");
+
+		final DtoTestObject root = new DtoTestObject();
+		root.setId(1L);
+		root.setTest1(shared);
+		root.setTest2(List.of(shared, shared));
+		root.setTest4(shared);
+
+		final DtoTestObject roundTrip = (DtoTestObject) fory.deserialize(fory.serialize(root));
+
+		Assertions.assertEquals(1L, roundTrip.getId());
+		Assertions.assertNotNull(roundTrip.getTest1());
+		Assertions.assertEquals(99L, roundTrip.getTest1().getId());
+		Assertions.assertEquals("shared", roundTrip.getTest1().getTest());
+		Assertions.assertNotNull(roundTrip.getTest2());
+		Assertions.assertEquals(2, roundTrip.getTest2().size());
+		Assertions.assertNotNull(roundTrip.getTest4());
+
+		// Ref tracking preserves identity across all visit sites — same instance, not deep copies.
+		Assertions.assertSame(roundTrip.getTest1(), roundTrip.getTest2().get(0), "Shared instance must round-trip as same reference (test1 vs test2[0]).");
+		Assertions.assertSame(roundTrip.getTest1(), roundTrip.getTest2().get(1), "Shared instance must round-trip as same reference (test1 vs test2[1]).");
+		Assertions.assertSame(roundTrip.getTest1(), roundTrip.getTest4(), "Shared instance must round-trip as same reference (test1 vs test4).");
+	}
+
+	/**
 	 * Two-instance pattern with a List of nested objects.
 	 */
 	@Test

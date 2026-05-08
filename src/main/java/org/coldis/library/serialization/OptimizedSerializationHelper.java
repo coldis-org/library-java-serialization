@@ -4,8 +4,10 @@ import java.lang.annotation.Annotation;
 import java.lang.annotation.Inherited;
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -370,7 +372,15 @@ public class OptimizedSerializationHelper {
 			}
 			final Map<Class<?>, String> preferredNames = new HashMap<>();
 			final Map<String, Class<?>> nameOwners = new HashMap<>();
-			for (final Class<?> clazz : classesToRegister) {
+			// Process non-deprecated classes first so they claim canonical type-name slots; deprecated
+			// peers (kept around as old-class-name aliases) find the slot taken and fall back to their
+			// FQN. Within each group, sort by FQN for deterministic ordering across runs.
+			final List<Class<?>> orderedClassesToRegister = classesToRegister.stream()
+					.sorted(Comparator
+							.comparing((final Class<?> clazz) -> clazz.isAnnotationPresent(Deprecated.class))
+							.thenComparing(Class::getName))
+					.toList();
+			for (final Class<?> clazz : orderedClassesToRegister) {
 				String preferred;
 				if (scope == RegistrationScope.ALL) {
 					preferred = clazz.getName();

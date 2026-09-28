@@ -239,13 +239,13 @@ public class OptimizedSerializationHelperTest {
 				.requireClassRegistration(true).build();
 		dualName.register(DtoTestObject.class, "shared", "TestObj");
 		Assertions.assertThrows(IllegalArgumentException.class,
-				() -> dualName.register(DtoTestObject.class, "", DtoTestObject.class.getName()));
+				() -> dualName.register(DtoTestObject.class, DtoTestObject.class.getName()));
 
 		final Fory sharedName = Fory.builder().registerGuavaTypes(false).withLanguage(Language.JAVA).withCompatibleMode(CompatibleMode.COMPATIBLE)
 				.requireClassRegistration(true).build();
-		sharedName.register(DtoTestObject.class, "", "shared.Conflict");
+		sharedName.register(DtoTestObject.class, "shared.Conflict");
 		Assertions.assertThrows(IllegalArgumentException.class,
-				() -> sharedName.register(DtoTestObjectDto.class, "", "shared.Conflict"));
+				() -> sharedName.register(DtoTestObjectDto.class, "shared.Conflict"));
 	}
 
 	/**
@@ -423,12 +423,12 @@ public class OptimizedSerializationHelperTest {
 		final String parentFqn = org.coldis.library.test.serialization.crossproc.hierarchy.model.HierarchyAbstractLog.class.getName();
 		final String leafName = "coldis.test.hierarchy.BusinessLog";
 
-		producer.register(org.coldis.library.test.serialization.crossproc.hierarchy.dto.HierarchyAbstractLogDto.class, "", parentFqn);
+		producer.register(org.coldis.library.test.serialization.crossproc.hierarchy.dto.HierarchyAbstractLogDto.class, parentFqn);
 		producer.register(org.coldis.library.test.serialization.crossproc.hierarchy.dto.HierarchyBusinessLogDto.class, "coldis.test.hierarchy", "BusinessLog");
 		producer.register(org.coldis.library.test.serialization.crossproc.hierarchy.model.HierarchyLogType.class);
 		producer.register(org.coldis.library.model.AbstractTimestampable.class);
 
-		consumer.register(org.coldis.library.test.serialization.crossproc.hierarchy.model.HierarchyAbstractLog.class, "", parentFqn);
+		consumer.register(org.coldis.library.test.serialization.crossproc.hierarchy.model.HierarchyAbstractLog.class, parentFqn);
 		consumer.register(org.coldis.library.test.serialization.crossproc.hierarchy.model.HierarchyBusinessLog.class, "coldis.test.hierarchy", "BusinessLog");
 		consumer.register(org.coldis.library.test.serialization.crossproc.hierarchy.model.HierarchyLogType.class);
 		consumer.register(org.coldis.library.model.AbstractTimestampable.class);

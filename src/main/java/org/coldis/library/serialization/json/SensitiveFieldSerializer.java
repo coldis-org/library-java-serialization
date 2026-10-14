@@ -55,7 +55,7 @@ public class SensitiveFieldSerializer<Type> extends JsonSerializer<Type> impleme
 	private final BigDecimal minMaskRelativeSize;
 
 	/** Delegate */
-	private JsonSerializer<Type> delegate;
+	private final JsonSerializer<Type> delegate;
 
 	/** Initializes the number serializers. */
 	static {
@@ -141,42 +141,42 @@ public class SensitiveFieldSerializer<Type> extends JsonSerializer<Type> impleme
 				: sensitiveAttribute.toBeMaskedRegex());
 
 		// Default serializer is the String serializer.
-		this.delegate = (JsonSerializer<Type>) ToStringSerializer.instance;
+		JsonSerializer<Type> contextualDelegate = (JsonSerializer<Type>) ToStringSerializer.instance;
 		final Class<?> actualSerializedClass = SensitiveFieldSerializer.getActualClass(property, this.originalClass);
 
 		// If it is a string, uses the string serializer.
 		if (String.class.isAssignableFrom(actualSerializedClass)) {
-			this.delegate = (JsonSerializer<Type>) new StringSerializer();
+			contextualDelegate = (JsonSerializer<Type>) new StringSerializer();
 		}
 		// If it is a number, uses the number serializer.
 		else if (SensitiveFieldSerializer.isNumberType(property, this.originalClass)) {
 			final JsonSerializer<?> numberSerializer = SensitiveFieldSerializer.NUMBER_SERIALIZERS.get(actualSerializedClass.getName());
 			if (numberSerializer == null) {
-				this.delegate = (JsonSerializer<Type>) SensitiveFieldSerializer.NUMBER_SERIALIZERS.get(this.originalClass.getName());
+				contextualDelegate = (JsonSerializer<Type>) SensitiveFieldSerializer.NUMBER_SERIALIZERS.get(this.originalClass.getName());
 			}
 			else {
-				this.delegate = (JsonSerializer<Type>) numberSerializer;
+				contextualDelegate = (JsonSerializer<Type>) numberSerializer;
 			}
 		}
 		// If it is a contextual serializer, creates the contextual serializer.
-		if (this.delegate instanceof final ContextualSerializer contextualSerializer) {
-			this.delegate = (JsonSerializer<Type>) contextualSerializer.createContextual(serializerProvider, property);
+		if (contextualDelegate instanceof final ContextualSerializer contextualSerializer) {
+			contextualDelegate = (JsonSerializer<Type>) contextualSerializer.createContextual(serializerProvider, property);
 		}
 
 		// If it is not a sensitive view and it is a sensitive field, uses the sensitive
 		// field serializer.
 		JsonSerializer<Type> serializer;
 		if (isSensitiveField) {
-			serializer = new SensitiveFieldSerializer<>(this.originalClass, true, sensitiveAttributeRegex, this.delegate);
+			serializer = new SensitiveFieldSerializer<>(this.originalClass, true, sensitiveAttributeRegex, contextualDelegate);
 		}
 		// If it is not a personal view and it is a personal field, uses the sensitive
 		// field serializer.
 		else if (isPersonalField) {
-			serializer = new SensitiveFieldSerializer<>(this.originalClass, false, sensitiveAttributeRegex, this.delegate);
+			serializer = new SensitiveFieldSerializer<>(this.originalClass, false, sensitiveAttributeRegex, contextualDelegate);
 		}
 		// If not a sensitive field, uses the delegate.
 		else {
-			serializer = this.delegate;
+			serializer = contextualDelegate;
 		}
 
 		// Returns the serializer.

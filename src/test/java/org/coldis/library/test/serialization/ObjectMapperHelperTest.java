@@ -1,18 +1,30 @@
 package org.coldis.library.test.serialization;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import org.coldis.library.model.view.ModelView;
 import org.coldis.library.serialization.ObjectMapperHelper;
+import org.coldis.library.serialization.json.SensitiveFieldDeserializer;
+import org.coldis.library.serialization.json.SensitiveFieldSerializer;
 import org.coldis.library.test.serialization.dto.DtoTestObject2Dto;
 import org.coldis.library.test.serialization.dto.DtoTestObjectDto;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.deser.std.StringDeserializer;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 
 /**
  * Object mapper helper test.
@@ -28,6 +40,16 @@ public class ObjectMapperHelperTest {
 			.withTest6(new DtoTestObject2Dto[] { new DtoTestObject2Dto().withId(5L).withTest("test5"), new DtoTestObject2Dto().withId(6L).withTest("test6") })
 			.withTest7(7).withTest88(new int[] { 2, 3, 4 }).withTest9(9).withTest10(1000000000000L).withTest11("Romulo Valente Coutinho")
 			.withTest12(TestEnum.ABC).withTest13(Map.of("test1", 1, "test2", "2")).withTest14("romulo@gmail.com") };
+
+	/**
+	 * Threads used by the concurrency tests.
+	 */
+	private static final int CONCURRENT_THREADS = 8;
+
+	/**
+	 * Calls made by each thread in the concurrency tests.
+	 */
+	private static final int CONCURRENT_CALLS = 500_000;
 
 	/**
 	 * Object mapper.
@@ -192,6 +214,70 @@ public class ObjectMapperHelperTest {
 
 		
 
+	}
+
+	/**
+	 * Runs a check from several threads at the same time and counts the calls that went wrong.
+	 *
+	 * @param  check     Check that returns true when the call went wrong.
+	 * @return           How many calls went wrong.
+	 * @throws Exception If the threads cannot run.
+	 */
+	private static long countConcurrentFailures(
+			final Callable<Boolean> check) throws Exception {
+		final ExecutorService executor = Executors.newFixedThreadPool(ObjectMapperHelperTest.CONCURRENT_THREADS);
+		final CyclicBarrier start = new CyclicBarrier(ObjectMapperHelperTest.CONCURRENT_THREADS);
+		long failures = 0;
+		try {
+			final List<Future<Long>> threadFailures = new ArrayList<>();
+			for (int thread = 0; thread < ObjectMapperHelperTest.CONCURRENT_THREADS; thread++) {
+				threadFailures.add(executor.submit(() -> {
+					start.await();
+					long failedCalls = 0;
+					for (int call = 0; call < ObjectMapperHelperTest.CONCURRENT_CALLS; call++) {
+						failedCalls += (check.call() ? 1 : 0);
+					}
+					return failedCalls;
+				}));
+			}
+			for (final Future<Long> failedCalls : threadFailures) {
+				failures += failedCalls.get();
+			}
+		}
+		finally {
+			executor.shutdownNow();
+		}
+		return failures;
+	}
+
+	/**
+	 * Tests that a sensitive field deserializer shared by concurrent threads always gives a number property a number deserializer.
+	 *
+	 * @throws Exception If the test does not succeed.
+	 */
+	@Test
+	public void testSensitiveFieldDeserializerConcurrentContextualization() throws Exception {
+		// The sensitive field module shares one instance per class among every property and thread.
+		final SensitiveFieldDeserializer<Object> sharedDeserializer = new SensitiveFieldDeserializer<>(Long.class);
+		final DeserializationContext deserializationContext = this.objectMapper.getDeserializationContext();
+		final long textDeserializers = ObjectMapperHelperTest
+				.countConcurrentFailures(() -> sharedDeserializer.createContextual(deserializationContext, null) instanceof StringDeserializer);
+		Assertions.assertEquals(0, textDeserializers);
+	}
+
+	/**
+	 * Tests that a sensitive field serializer shared by concurrent threads always gives a number property a number serializer.
+	 *
+	 * @throws Exception If the test does not succeed.
+	 */
+	@Test
+	public void testSensitiveFieldSerializerConcurrentContextualization() throws Exception {
+		// The sensitive field module shares one instance per class among every property and thread.
+		final SensitiveFieldSerializer<Object> sharedSerializer = new SensitiveFieldSerializer<>(Long.class);
+		final ThreadLocal<SerializerProvider> serializerProvider = ThreadLocal.withInitial(this.objectMapper::getSerializerProviderInstance);
+		final long textSerializers = ObjectMapperHelperTest
+				.countConcurrentFailures(() -> sharedSerializer.createContextual(serializerProvider.get(), null) instanceof ToStringSerializer);
+		Assertions.assertEquals(0, textSerializers);
 	}
 
 }

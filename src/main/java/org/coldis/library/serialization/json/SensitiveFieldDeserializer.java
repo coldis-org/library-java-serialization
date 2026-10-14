@@ -26,7 +26,7 @@ public class SensitiveFieldDeserializer<Type> extends JsonDeserializer<Type> imp
 	private Class<?> originalClass;
 
 	/** Delegate deserializer. */
-	JsonDeserializer<Type> delegate;
+	final JsonDeserializer<Type> delegate;
 
 	/** Constructor. */
 	@SuppressWarnings("unchecked")
@@ -59,33 +59,33 @@ public class SensitiveFieldDeserializer<Type> extends JsonDeserializer<Type> imp
 				&& Arrays.stream(propertyJsonView.value()).anyMatch(view -> ModelView.Personal.class.isAssignableFrom(view));
 
 		// Default deserializer is the String deserializer.
-		this.delegate = (JsonDeserializer<Type>) StringDeserializer.instance;
+		JsonDeserializer<Type> contextualDelegate = (JsonDeserializer<Type>) StringDeserializer.instance;
 		final Class<?> actualSerializedClass = SensitiveFieldSerializer.getActualClass(property, this.originalClass);
 
 		// If it is a number, uses the number deserializer.
 		if (SensitiveFieldSerializer.isNumberType(property, this.originalClass)) {
 			final JsonDeserializer<?> numberDeserializer = NumberDeserializers.find(actualSerializedClass, actualSerializedClass.getName());
 			if (numberDeserializer == null) {
-				this.delegate = (JsonDeserializer<Type>) NumberDeserializers.find(this.originalClass, this.originalClass.getName());
+				contextualDelegate = (JsonDeserializer<Type>) NumberDeserializers.find(this.originalClass, this.originalClass.getName());
 			}
 			if (numberDeserializer != null) {
-				this.delegate = (JsonDeserializer<Type>) numberDeserializer;
+				contextualDelegate = (JsonDeserializer<Type>) numberDeserializer;
 			}
 		}
 
 		// If it is a contextual deserializer, creates the contextual deserializer.
-		if (this.delegate instanceof final ContextualDeserializer contextualDeserializer) {
-			this.delegate = (JsonDeserializer<Type>) contextualDeserializer.createContextual(deserializationContext, property);
+		if (contextualDelegate instanceof final ContextualDeserializer contextualDeserializer) {
+			contextualDelegate = (JsonDeserializer<Type>) contextualDeserializer.createContextual(deserializationContext, property);
 		}
 
 		// If it is a sensitive field, uses the sensitive field deserializer.
 		JsonDeserializer<Type> deserializer;
 		if (isSensitiveField || isPersonalField) {
-			deserializer = new SensitiveFieldDeserializer<>(this.originalClass, this.delegate);
+			deserializer = new SensitiveFieldDeserializer<>(this.originalClass, contextualDelegate);
 		}
 		// If not a sensitive field, uses the delegate.
 		else {
-			deserializer = this.delegate;
+			deserializer = contextualDelegate;
 		}
 
 		// Returns the deserializer.
